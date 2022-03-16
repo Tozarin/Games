@@ -10,8 +10,8 @@ namespace Tests
         public void Haffman(string messenge, char[] alphabet)
         {
             int len = alphabet.Length;
-            List<double> p = new double[len].Select(x => 1.0).ToList();
-            double count = len;
+            List<double> p = new double[len].Select(x => 1.0).ToList(); // Rates of letters
+            double count = len; // Length of readed messenge
             foreach (char c in messenge)
             {
                 List<Letters> letters = new List<Letters>();
@@ -23,6 +23,7 @@ namespace Tests
 
                 for (int _ = 0; _ < len - 1; _++)
                 {
+                    // Insex of first min
                     double mn = 1;
                     int index = 0;
                     for (int i = 0; i < len; i++)
@@ -33,7 +34,7 @@ namespace Tests
                             mn = letters[i].Prob;
                         }
                     }
-
+                    // Index of second min
                     double mn2 = 1;
                     int index2 = 0;
                     for (int i = 0; i < len; i++)
@@ -45,6 +46,8 @@ namespace Tests
                         }
                     }
 
+                    // Rates of both letters are sumed
+                    // and less gets 1 for code, second gets 0
                     double mn3 = mn + mn2;
                     foreach (int i in letters[index].ConnectedElements)
                     {
@@ -57,7 +60,7 @@ namespace Tests
                         letters[i].Prob = mn3;
                         letters[i].Code += "0";
                     }
-
+                    // Update of set linked letters
                     letters[index].ConnectedElements = letters[index].ConnectedElements.Concat(letters[index2].ConnectedElements).ToList();
                     letters[index2].ConnectedElements = letters[index].ConnectedElements;
                 }
@@ -77,6 +80,8 @@ namespace Tests
 
         public void HaffmanWithEsc(string messenge)
         {
+            // Haffman but with dynamic alphabet
+            // and cheking for new letters
             List<char> alphabet = new List<char> { '~', '@' };
             int len = 2;
             List<double> p = new List<double> { 1.0, 1.0 };
@@ -160,6 +165,7 @@ namespace Tests
 
         public void Arifmetic(string messenge, char[] alphabet, double[] prob)
         {
+            // Starting markup
             List<ArifmeticLetters> letters = new List<ArifmeticLetters>();
             double sum = 0;
             for(int i = 0; i < alphabet.Length; i++)
@@ -167,7 +173,8 @@ namespace Tests
                 letters.Add(new ArifmeticLetters(alphabet[i], sum, sum + prob[i], prob[i]));
                 sum += prob[i];
             }
-
+            
+            // Starting length and left side's coordinate
             double len = 1;
             double leftSide = 0;
 
@@ -180,13 +187,14 @@ namespace Tests
                         double newLen = let.GetLength();
                         leftSide = let.Left;
                         double summa = 0;
+                        // New markup
                         foreach(ArifmeticLetters letter in letters)
                         {
                             double oldLen = letter.GetLength();
                             letter.Left = leftSide + summa;
                             summa += ((oldLen / len) * newLen);
                             letter.Right = leftSide + summa;
-                        } // Харисс Архитектура, 
+                        }
                         len = newLen;
                         break;
                     }
@@ -201,6 +209,7 @@ namespace Tests
             string buffer = "";
             for(int i = 0; i < messenge.Length; i++)
             {
+                // Set of possible variants of code
                 List<List<int>> posible = new List<List<int>>();
 
                 for (int j = 0; j < buffer.Length; j++)
@@ -229,6 +238,7 @@ namespace Tests
                 else
                 {
                     posible = posible.OrderBy(x => x.First()).Reverse().ToList();
+                    // Offset on len in messenge
                     i += posible.First().First();
                     WriteLine(posible.First().Last() + ", " + posible.First().First() + ", " +  messenge[i]);
                 }
