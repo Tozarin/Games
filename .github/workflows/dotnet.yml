@@ -6,7 +6,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2.1.0
-      - run:  git checkout discrete-mathematics
+      - run:  |
+              git checkout discrete-mathematics
               git pull
               cd "Discrete mathematics"
               cd Discra
