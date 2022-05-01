@@ -11,6 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-              cd "Discrete mathemarics"
+              cd "Discrete mathematics"
               cd Discra
               dotnet test
