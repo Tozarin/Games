@@ -5,6 +5,10 @@ jobs:
     name: Unit Testing
     runs-on: windows-latest
     steps:
-      - run: git checkout discrete-mathematics
       - uses: actions/checkout@v3
-      - run:  ls
+        with:
+          rep: discrete-mathematics
+      - run: |
+              ls
+              git branch
+              git branch -r
