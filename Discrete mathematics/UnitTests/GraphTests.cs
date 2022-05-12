@@ -37,8 +37,14 @@ namespace UnitTests
             graph.AddEdge(1, 1, 2);
 
             var gr = new Graph(new int[,] { { 2, 1 }, { 1, 2 } });
+            var listsOfedges = new List<(int x, int y, int len)>[]
+            {
+                new List<(int x, int y, int len)> { (0, 1, 1), (0, 0, 2) },
+                new List<(int x, int y, int len)> { (1, 0, 1), (1, 1, 2) }
+            };
 
             Assert.AreEqual(gr.Vertexes, graph.Vertexes);
+            Assert.AreEqual(listsOfedges, graph.ListsOfEdges);
 
             Assert.Pass();
         }
