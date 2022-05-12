@@ -11,6 +11,7 @@ namespace UnitTests
         public void FindSetTest()
         {
             Assert.AreEqual(sets.FindSet(1), 1);
+            Assert.AreEqual(sets.FindSet(42), 0);
 
             Assert.Pass();
         }
