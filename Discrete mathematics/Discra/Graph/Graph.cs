@@ -1,4 +1,6 @@
-﻿namespace Discra
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace Discra
 {
     public class Graph
     {
@@ -6,12 +8,16 @@
         public int[] Weights { get; }
         public int[,] Vertexes { get; private set; }
         public List<(int x, int y, int len)> Edges { get; private set; } = new List<(int x, int y, int len)> ();
+        public List<(int x, int y, int len)>[] ListsOfEdges { get; private set; }
 
         public Graph(int size)
         {
             Size = size;
             Vertexes = new int[size, size];
             Weights = new int[size];
+            ListsOfEdges = new List<(int x, int y, int len)>[Size]
+                .Select(x => new List<(int x, int y, int len)>())
+                .ToArray();
         }
 
         //public Graph(int size, int[,] vertexes, List<(int x, int y, int len)> edges, int[] weights)
@@ -26,6 +32,13 @@
         {
             Size = graph.Size;
             Edges = new List<(int x, int y, int len)>(graph.Edges);
+            ListsOfEdges = new List<(int x, int y, int len)>[graph.Size]
+                .Select(x => new List<(int x, int y, int len)>())
+                .ToArray();
+            foreach (var edge in Edges)
+            {
+                ListsOfEdges[edge.x].Add(edge);
+            }
             Vertexes = (int[,])graph.Vertexes.Clone();
             Weights = (int[])graph.Weights.Clone();
         }
@@ -35,6 +48,9 @@
             Size = graph.GetLength(0);
             Vertexes = graph;
             Weights = new int[Size];
+            ListsOfEdges = new List<(int x, int y, int len)>[Size]
+                .Select(x => new List<(int x, int y, int len)>())
+                .ToArray();
 
             for (var i = 0; i < Size; i++)
             {
@@ -43,6 +59,7 @@
                     if (graph[i, j] != 0)
                     {
                         Edges.Add((i, j, graph[i, j]));
+                        ListsOfEdges[i].Add((i, j, graph[i, j]));
                     }
                 }
             }
@@ -105,6 +122,8 @@
             Edges.Add((edge.y, edge.x, edge.len));
             Vertexes[edge.x, edge.y] = edge.len;
             Vertexes[edge.y, edge.x] = edge.len;
+            ListsOfEdges[edge.x].Add(edge);
+            if (edge.x != edge.y) ListsOfEdges[edge.y].Add((edge.y, edge.x, edge.len));
         }
 
         public void AddEdge(int x, int y, int len)
@@ -113,6 +132,8 @@
             Edges.Add((y, x, len));
             Vertexes[x, y] = len;
             Vertexes[y, x] = len;
+            ListsOfEdges[x].Add((x, y, len));
+            if (x != y) ListsOfEdges[y].Add((y, x, len));
         }
 
         public (int v, int w) GetVertexAndWeightWithMinValue(bool[] usedV)
