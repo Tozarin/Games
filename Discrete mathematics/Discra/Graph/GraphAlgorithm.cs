@@ -21,25 +21,54 @@
             return spanningTree;
         }
 
+        //public Graph Prim(Graph graph, int s)
+        //{
+        //    var spanningTree = new Graph(graph.Size);
+        //    var edges = new List<(int x, int y, int len)>(graph.Edges);
+        //    var usedV = new bool[graph.Size];
+        //    usedV[s] = true;
+        //    var countOfV = 1;
+
+        //    while(countOfV != graph.Size)
+        //    {
+        //        foreach(var e in edges)
+        //        {
+        //            if (usedV[e.x] && !usedV[e.y])
+        //            {
+        //                edges.Remove(e);
+        //                spanningTree.AddEdge(e);
+        //                usedV[e.y] = true;
+        //                countOfV++;
+        //                break;
+        //            }
+        //        }
+        //    }
+
+        //    return spanningTree;
+        //}
+
         public Graph Prim(Graph graph, int s)
         {
             var spanningTree = new Graph(graph.Size);
-            var edges = new List<(int x, int y, int len)>(graph.Edges);
             var usedV = new bool[graph.Size];
+            var queue = new PriorityQueue<(int x, int y, int len), int>();
+            var startEdge = graph.ListsOfEdges[s].OrderBy(x => x.len).First();
+            queue.Enqueue(startEdge, 0);
             usedV[s] = true;
-            var countOfV = 1;
-
-            while(countOfV != graph.Size)
+            
+            while (queue.Count != 0)
             {
-                foreach(var e in edges)
+                var v = queue.Dequeue();
+                if (!usedV[v.y])
                 {
-                    if (usedV[e.x] && !usedV[e.y])
+                    spanningTree.AddEdge(v);
+                    usedV[v.y] = true;
+                    foreach (var vv in graph.ListsOfEdges[v.y])
                     {
-                        edges.Remove(e);
-                        spanningTree.AddEdge(e);
-                        usedV[e.y] = true;
-                        countOfV++;
-                        break;
+                        if (!usedV[vv.y])
+                        {
+                            queue.Enqueue(vv, vv.len);
+                        }
                     }
                 }
             }
