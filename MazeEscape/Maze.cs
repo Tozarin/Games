@@ -4,26 +4,22 @@
     {
         public int LenghtOfMaze { get; private set; }
 
+        private FiguresManager _figuresManager;
 
-        private List<Edge> edgeList = new List<Edge>();
         public Maze(int lenghtOfMaze)
         {
             LenghtOfMaze = lenghtOfMaze;
+            _figuresManager = new FiguresManager();
         }
 
         public Maze WithLenghtOfMaze(int lenghtOfMaze) => new Maze(lenghtOfMaze);
 
-        public void AddEdge(Edge edge)
-        {
-            edgeList.Add(edge);
-        }
+        public void AddEdge(Edge edge) => _figuresManager.AddEdge(edge);
 
-        public void PrintEdges()
+        public Maze ReadMaze(string fileName)
         {
-            foreach (var edge in edgeList)
-            {
-                Console.WriteLine(edge.FirstPoint.ToString() + " " + edge.SecondPoint.ToString());
-            }
+            var reader = new MazeReader(LenghtOfMaze);
+            return reader.ReadMaze(fileName);
         }
     }
 }

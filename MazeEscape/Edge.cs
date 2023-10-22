@@ -25,5 +25,8 @@
         public Edge WithFirstPoint(int x, int y) => new Edge(x, y, _xSecondPoint, _ySecondPoint);
 
         public Edge WithSecondPoint(int x, int y) => new Edge(_xFirstPoint, _yFirstPoint, x, y);
+
+        public bool IsConnectedWith(Edge edge)
+            => Points.Contains(edge.FirstPoint) || Points.Contains(edge.SecondPoint);
     }
 }
