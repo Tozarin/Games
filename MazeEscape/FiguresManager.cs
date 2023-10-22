@@ -26,7 +26,7 @@
                     }
                     else
                     {
-                        havePoint.Union(edge, figure);
+                        havePoint.Union(figure, edge);
                         toRemove = figure;
                         break;
                     }

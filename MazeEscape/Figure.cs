@@ -177,9 +177,96 @@
         public bool ContainsFullEdge(Edge edge)
             => _cycles.Any((x) => x.ContainsFullEdge(edge));
 
-        public void Union(Edge edge, Figure figure)
+        public void Union(Figure figure, Edge edge)
         {
+            var newCycles = new List<Cycle>();
+            var newInners = new Dictionary<Cycle, List<List<Edge>>>();
 
+            var connectedInners = new List<(Cycle, List<Edge>)>();
+            var connectedCycles = new List<Cycle>();
+
+            foreach (var cycle in _cycles)
+            {
+                if (cycle.ContainsPointFromEdge(edge))
+                    connectedCycles.Add(cycle);
+                newCycles.Add(cycle);
+            }
+
+            foreach (var cycle in figure.Cycles)
+            {
+                if (cycle.ContainsPointFromEdge(edge))
+                    connectedCycles.Add(cycle);
+
+                newCycles.Add(cycle);
+            }
+
+            foreach (var (cycle, inners) in _inners)
+            {
+                foreach (var inner in inners)
+                {
+                    if (inner.Any((x) => x.IsConnectedWith(edge)))
+                        connectedInners.Add((cycle, inner));
+                }
+
+                newInners.Add(cycle, inners);
+            }
+
+            foreach (var (cycle, inners) in figure.Inners)
+            {
+                foreach (var inner in inners)
+                {
+                    if (inner.Any((x) => x.IsConnectedWith(edge)))
+                        connectedInners.Add((cycle, inner));
+                }
+
+                newInners.Add(cycle, inners);
+            }
+
+            var countOfInners = connectedInners.Count;
+            var countOfCycles = connectedCycles.Count;
+
+            if ((countOfInners, countOfCycles) == (2, 0))
+            {
+                var firstCycle = connectedInners.First().Item1;
+                var secondCycle = connectedInners.Last().Item1;
+                var firstInner = connectedInners.First().Item2;
+                var secondInner = connectedInners.Last().Item2;
+
+                var newInner = firstInner.Concat(secondInner).ToList();
+                newInner.Add(edge);
+
+                newInners[firstCycle] = newInners[firstCycle]
+                    .Select(
+                        (x) => { if (x == firstInner) return newInner; return x; }
+                    ).ToList();
+                newInners[secondCycle] = newInners[secondCycle]
+                    .Select(
+                        (x) => { if (x == secondInner) return newInner; return x; }
+                    ).ToList();
+            }
+            else if ((countOfInners, countOfCycles) == (0, 2))
+            {
+                newInners[connectedCycles.First()].Add(new List<Edge> { edge });
+                newInners[connectedCycles.Last()].Add(new List<Edge> { edge });
+            }
+            else if ((countOfInners, countOfCycles) == (1, 1))
+            {
+                var newInner = connectedInners.First().Item2;
+                newInner.Add(edge);
+
+                newInners[connectedCycles.First()].Add(newInner);
+                newInners[connectedInners.First().Item1] = newInners[connectedInners.First().Item1]
+                    .Select(
+                        (x) => { if (x == connectedInners.First().Item2) return newInner; return x; }
+                    ).ToList();
+            }
+            else
+            {
+                throw new Exception("Missing invariant at union");
+            }
+
+            _cycles = newCycles;
+            _inners = newInners;
         }
     }
 }
