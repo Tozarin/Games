@@ -32,8 +32,49 @@
             var countOfInners = connectedInners.Count;
             var countOfCycles = connectedCycles.Count;
 
-            if ((countOfInners, countOfCycles) == (1, 0))
+            if ((countOfInners, countOfCycles) == (0, 0))
             {
+                // new figure 
+                _inners.Add(null, new List<List<Edge>> { new List<Edge> { edge } });
+            }
+            else if ((countOfInners, countOfCycles) == (1, 0))
+            {
+                var allredyConnected = false;
+                var cycle = false;
+                foreach (var e in connectedInners.First().Item2)
+                {
+                    if (e.IsConnectedWith(edge))
+                    {
+                        cycle = allredyConnected;
+                        if (cycle) break;
+                        allredyConnected = true;
+                    }
+                }
+
+                connectedInners.First().Item2.Add(edge);
+
+                if (cycle)
+                {
+                    var newCycle = new Cycle();
+                    var newInners = newCycle.FromSingleInner(connectedInners.First().Item2);
+
+
+                    _inners.Add(newCycle, newInners);
+
+                    foreach (var inner in newInners)
+                    {
+                        if (inner.Any((x) => connectedInners.First().Item1.ContainsPointFromEdge(x)))
+                        {
+                            _inners[connectedInners.First().Item1] = _inners[connectedInners.First().Item1]
+                                .Select(
+                                    (x) => { if (x == connectedInners.First().Item2) return inner; return x; }
+                                ).ToList();
+                        }
+                    }
+
+                    return;
+                }
+
                 _inners[connectedInners.First().Item1]
                     .Select(
                         (x) => { if (x == connectedInners.First().Item2) x.Add(edge); return x; }

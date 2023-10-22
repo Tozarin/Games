@@ -14,12 +14,17 @@
             return null;
         }
 
+        public List<List<Edge>> FromSingleInner(List<Edge> inner)
+        {
+            return null;
+        }
+
         public List<List<Edge>> ExpandCycle(List<Edge> firstInners, List<Edge> secondInners, Edge edge)
         {
             return null;
         }
 
-        public void AddEdge(Edge edge) => _edges.Add(edge);
+        //public void AddEdge(Edge edge) => _edges.Add(edge);
 
         public bool ContainsPointFromEdge(Edge edge)
             => _edges.Exists((x) => edge.IsConnectedWith(x));
