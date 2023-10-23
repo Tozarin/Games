@@ -36,6 +36,7 @@
             if (toRemove != null)
             {
                 _figures.Remove(toRemove);
+                return;
             }
 
             if (havePoint != null)

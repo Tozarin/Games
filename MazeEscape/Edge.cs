@@ -37,5 +37,15 @@
 
         public bool IsSameAs(Edge edge)
             => Points.Contains(edge.FirstPoint) && Points.Contains(edge.SecondPoint);
+
+        public (int, int) GetSamePoint(Edge edge)
+        {
+            if ((edge.FirstPoint == FirstPoint) || (edge.FirstPoint == SecondPoint))
+                return edge.FirstPoint;
+            if ((edge.SecondPoint == FirstPoint) || (edge.SecondPoint == SecondPoint))
+                return edge.SecondPoint;
+
+            throw new Exception("Edges are not connected");
+        }
     }
 }

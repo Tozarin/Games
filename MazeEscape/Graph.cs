@@ -39,6 +39,54 @@
 			_edges = edges;
 		}
 
+		public (int, int) IsConnectedWithOn(Edge edge)
+        {
+			foreach (var e in _edges)
+				if (e.IsConnectedWith(edge))
+					return e.GetSamePoint(edge);
+
+			return (-1, -1);
+        }
+
+		public List<List<Edge>> FindTwoPaths((int, int) firstPoint, (int, int) secondPoint)
+		{
+			var firstPath = new List<Edge>();
+			var secondPath = new List<Edge>();
+
+			var prevIndex = _indexMap[firstPoint];
+			var indexFrom = -1;
+			var secondIndex = _indexMap[secondPoint];
+			var map = _indexMap.Keys.ToArray();
+			var second = false;
+
+			while (true)
+			{
+				for (var i = 0; i < _size; i++)
+				{
+					if (_vertexies[prevIndex, i] && indexFrom != i)
+					{
+						if (!second)
+							firstPath.Add(new Edge(map[prevIndex], map[i]));
+						else
+							secondPath.Add(new Edge(map[prevIndex], map[i]));
+
+						indexFrom = prevIndex;
+						prevIndex = i;
+
+						if (i == secondIndex)
+							second = true;
+
+						break;
+					}
+				}
+
+				if (second && prevIndex == _indexMap[firstPoint])
+					break;
+			}
+
+			return new List<List<Edge>> { firstPath, secondPath };
+        }
+
 		public (List<Edge>, List<List<Edge>>) GetCycleAndInners()
         {
 			var stack = new List<int>();
@@ -93,22 +141,19 @@
 			var otherEdges = new List<Edge>(_edges);
 			otherEdges.RemoveAll((x) => cycle.Any((y) => y.IsSameAs(x)));
 			foreach (var edge in otherEdges)
-            {
-				for (var i = 0; i < inners.Count; i++)
-                {
-					if (inners[i].First().FirstPoint == edge.SecondPoint)
-                    {
-						inners[i] = new List<Edge> { edge }.Concat(inners[i]).ToList();
-                    }
+			{
+				var added = false;
 
-					if (inners[i].Last().SecondPoint == edge.FirstPoint)
-                    {
-						inners[i].Add(edge);
-                    }
-                }
+				foreach (var inner in inners)
+					if (inner.Any((x) => x.IsConnectedWith(edge)))
+					{
+						inner.Add(edge);
+						added = true;
+					}
 
-				inners.Add(new List<Edge> { edge });
-            }
+				if (!added)
+					inners.Add(new List<Edge> { edge });
+			}
 
 			return (cycle, inners);
         }

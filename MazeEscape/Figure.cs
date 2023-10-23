@@ -62,20 +62,21 @@
                     var newCycle = new Cycle();
                     var newInners = newCycle.FromSingleInner(connectedInners.First().Item2);
 
-                    _inners.Remove(connectedInners.First().Item1);
-                    _inners.Add(newCycle, newInners);
+                    if (newInners.Count > 0)
+                        _inners.Add(newCycle, newInners);
                     _cycles.Add(newCycle);
 
-                    foreach (var inner in newInners)
-                    {
-                        if (inner.Any((x) => connectedInners.First().Item1.ContainsPointFromEdge(x)))
-                        {
-                            _inners[connectedInners.First().Item1] = _inners[connectedInners.First().Item1]
-                                .Select(
-                                    (x) => { if (x == connectedInners.First().Item2) return inner; return x; }
-                                ).ToList();
-                        }
-                    }
+                    if (connectedInners.First().Item1.Lenght == 0)
+                        _inners.Remove(connectedInners.First().Item1);
+                    else
+                        foreach (var inner in newInners)
+                            if (inner.Any((x) => connectedInners.First().Item1.ContainsPointFromEdge(x)))
+                            {
+                                _inners[connectedInners.First().Item1] = _inners[connectedInners.First().Item1]
+                                    .Select(
+                                        (x) => { if (x.Any((y) => y.IsSameAs(inner.First()))) return inner; return x; }
+                                    ).ToList();
+                            }
 
                     return;
                 }
@@ -104,8 +105,11 @@
                         ).ToList();
 
                     _inners.Remove(rootCycle);
-                    // same inners in variant of 1 1 ?
-                    var newInners = rootCycle.ExpandCycle(connectedInners.First().Item2, connectedInners.Last().Item2, edge);
+
+                    var secondInners = (countOfInners, countOfCycles) == (1, 1) 
+                        ? new List<Edge> { edge } 
+                        : connectedInners.Last().Item2.Append(edge).ToList();
+                    var newInners = rootCycle.ExpandCycle(connectedInners.First().Item2, secondInners);
 
                     _inners.Add(rootCycle, oldInners.Concat(newInners).ToList());
                 }
@@ -179,9 +183,10 @@
                         _cycles.Remove(firstCycle);
                         _cycles.Remove(secondCycle);
 
-                        var newCycle = firstCycle.FromTwoCyclesAndInners(secondCycle, newInner, connectedInner);
-                        _inners.Add(newCycle, newInners);
-                        _cycles.Add(newCycle);
+                        var otherInners = firstCycle.FromTwoCyclesAndInners(secondCycle, newInner, connectedInner);
+                        newInners.AddRange(otherInners);
+                        _inners.Add(firstCycle, newInners);
+                        _cycles.Add(firstCycle);
                     }
                     else
                     {
@@ -281,14 +286,22 @@
                 var newInner = firstInner.Concat(secondInner).ToList();
                 newInner.Add(edge);
 
-                newInners[firstCycle] = newInners[firstCycle]
-                    .Select(
-                        (x) => { if (x == firstInner) return newInner; return x; }
-                    ).ToList();
-                newInners[secondCycle] = newInners[secondCycle]
-                    .Select(
-                        (x) => { if (x == secondInner) return newInner; return x; }
-                    ).ToList();
+                if (firstCycle.Lenght == 0 && secondCycle.Lenght == 0)
+                {
+                    newInners = new Dictionary<Cycle, List<List<Edge>>>();
+                    newInners.Add(new Cycle(), new List<List<Edge>> { newInner });
+                }
+                else
+                {
+                    newInners[firstCycle] = newInners[firstCycle]
+                        .Select(
+                            (x) => { if (x == firstInner) return newInner; return x; }
+                        ).ToList();
+                    newInners[secondCycle] = newInners[secondCycle]
+                        .Select(
+                            (x) => { if (x == secondInner) return newInner; return x; }
+                        ).ToList();
+                }
             }
             else if ((countOfInners, countOfCycles) == (0, 2))
             {
@@ -300,11 +313,18 @@
                 var newInner = connectedInners.First().Item2;
                 newInner.Add(edge);
 
-                newInners[connectedCycles.First()].Add(newInner);
-                newInners[connectedInners.First().Item1] = newInners[connectedInners.First().Item1]
-                    .Select(
-                        (x) => { if (x == connectedInners.First().Item2) return newInner; return x; }
-                    ).ToList();
+                if (newInners.ContainsKey(connectedCycles.First()))
+                    newInners[connectedCycles.First()].Add(newInner);
+                else
+                    newInners.Add(connectedCycles.First(), new List<List<Edge>> { newInner });
+
+                if (connectedInners.First().Item1.Lenght > 0)
+                    newInners[connectedInners.First().Item1] = newInners[connectedInners.First().Item1]
+                        .Select(
+                            (x) => { if (x == connectedInners.First().Item2) return newInner; return x; }
+                        ).ToList();
+                else 
+                    newInners.Remove(connectedInners.First().Item1);
             }
             else
             {
@@ -313,13 +333,6 @@
 
             _cycles = newCycles;
             _inners = newInners;
-
-            foreach (var cycle in _inners.Keys)
-                if (cycle.Lenght == 0)
-                {
-                    _inners.Remove(cycle);
-                    break;
-                }
         }
     }
 }
