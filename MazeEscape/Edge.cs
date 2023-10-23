@@ -20,7 +20,13 @@
         }
 
         public Edge((int, int) firstPoint, (int, int) secondPoint)
-            => new Edge(firstPoint.Item1, FirstPoint.Item2, SecondPoint.Item1, SecondPoint.Item2);
+        {
+            _xFirstPoint = firstPoint.Item1;
+            _yFirstPoint = firstPoint.Item2;
+            _xSecondPoint = secondPoint.Item1;
+            _ySecondPoint = secondPoint.Item2;
+        }
+            
 
         public Edge WithFirstPoint(int x, int y) => new Edge(x, y, _xSecondPoint, _ySecondPoint);
 
@@ -28,5 +34,8 @@
 
         public bool IsConnectedWith(Edge edge)
             => Points.Contains(edge.FirstPoint) || Points.Contains(edge.SecondPoint);
+
+        public bool IsSameAs(Edge edge)
+            => Points.Contains(edge.FirstPoint) && Points.Contains(edge.SecondPoint);
     }
 }

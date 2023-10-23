@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "MazeEscape/1.0.0": {
+        "runtime": {
+          "MazeEscape.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "MazeEscape/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

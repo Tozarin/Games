@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32228.430
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MazeEscape", "MazeEscape.csproj", "{44FEC185-D72A-4789-A2B2-C5AEF12F26C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MazeEscape", "MazeEscape.csproj", "{44FEC185-D72A-4789-A2B2-C5AEF12F26C6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F5AF12E1-D57A-4810-A0BB-D2E2611F6884}"
+	ProjectSection(SolutionItems) = preProject
+		Graph.cs = Graph.cs
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

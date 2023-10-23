@@ -14,6 +14,8 @@
             _inners = new Dictionary<Cycle, List<List<Edge>>>();
         }
 
+        public bool ContainsPoint((float, float) point) => _cycles.Any((x) => x.ContainsPoint(point));
+
         public void AddEdge(Edge edge)
         {
             if (ContainsFullEdge(edge)) return;
@@ -35,31 +37,34 @@
             if ((countOfInners, countOfCycles) == (0, 0))
             {
                 // new figure 
-                _inners.Add(null, new List<List<Edge>> { new List<Edge> { edge } });
+                _inners.Add(new Cycle(), new List<List<Edge>> { new List<Edge> { edge } });
             }
             else if ((countOfInners, countOfCycles) == (1, 0))
             {
-                var allredyConnected = false;
+                var connectedFirst = false;
+                var connectedSecond = false;
                 var cycle = false;
                 foreach (var e in connectedInners.First().Item2)
                 {
-                    if (e.IsConnectedWith(edge))
-                    {
-                        cycle = allredyConnected;
-                        if (cycle) break;
-                        allredyConnected = true;
-                    }
-                }
+                    if (e.Points.Contains(edge.FirstPoint))
+                        connectedFirst = true;
+                    if (e.Points.Contains(edge.SecondPoint))
+                        connectedSecond = true;
 
-                connectedInners.First().Item2.Add(edge);
+                    cycle = connectedFirst && connectedSecond;
+                    if (cycle) break;
+                }
 
                 if (cycle)
                 {
+                    connectedInners.First().Item2.Add(edge);
+
                     var newCycle = new Cycle();
                     var newInners = newCycle.FromSingleInner(connectedInners.First().Item2);
 
-
+                    _inners.Remove(connectedInners.First().Item1);
                     _inners.Add(newCycle, newInners);
+                    _cycles.Add(newCycle);
 
                     foreach (var inner in newInners)
                     {
@@ -75,7 +80,7 @@
                     return;
                 }
 
-                _inners[connectedInners.First().Item1]
+                _inners[connectedInners.First().Item1] = _inners[connectedInners.First().Item1]
                     .Select(
                         (x) => { if (x == connectedInners.First().Item2) x.Add(edge); return x; }
                     ).ToList();
@@ -212,7 +217,7 @@
         public bool ContainsPointFromEdge(Edge edge)
         {
             return _cycles.Any((x) => x.ContainsPointFromEdge(edge))
-                && _inners.Any((x) => { return x.Value.Any((y) => y.Any((z) => z.IsConnectedWith(edge))); });
+                || _inners.Any((x) => { return x.Value.Any((y) => y.Any((z) => z.IsConnectedWith(edge))); });
         }
 
         public bool ContainsFullEdge(Edge edge)
@@ -308,6 +313,13 @@
 
             _cycles = newCycles;
             _inners = newInners;
+
+            foreach (var cycle in _inners.Keys)
+                if (cycle.Lenght == 0)
+                {
+                    _inners.Remove(cycle);
+                    break;
+                }
         }
     }
 }

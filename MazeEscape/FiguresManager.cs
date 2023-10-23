@@ -49,5 +49,7 @@
                 _figures.Add(newFigure);
             }
         }
+
+        public bool ContainsPoint((float, float) point) => _figures.Any((x) => x.ContainsPoint(point));
     }
 }

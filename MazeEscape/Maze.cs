@@ -21,5 +21,7 @@
             var reader = new MazeReader(LenghtOfMaze);
             return reader.ReadMaze(fileName);
         }
+
+        public bool ContainsPoint((float, float) point) => _figuresManager.ContainsPoint(point);
     }
 }

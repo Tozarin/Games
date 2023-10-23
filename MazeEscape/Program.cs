@@ -4,9 +4,13 @@
     {
         public static void Main(string[] args)
         {
-            var reader = new MazeReader(4);
-            var maze = reader.ReadMaze("C:/test.maze");
-            maze.PrintEdges();
+            var maze = new Maze(4);
+            maze = maze.ReadMaze("C:/test.maze");
+
+            Console.WriteLine(maze.ContainsPoint((0.5f, 0.5f)));
+            Console.WriteLine(maze.ContainsPoint((3.5f, 0.5f)));
+            Console.WriteLine(maze.ContainsPoint((1.5f, 3.5f)));
+            Console.WriteLine(maze.ContainsPoint((0.5f, 2.5f)));
         }
     }
 }
