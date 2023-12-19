@@ -293,14 +293,21 @@
                 }
                 else
                 {
-                    newInners[firstCycle] = newInners[firstCycle]
-                        .Select(
-                            (x) => { if (x == firstInner) return newInner; return x; }
-                        ).ToList();
-                    newInners[secondCycle] = newInners[secondCycle]
-                        .Select(
-                            (x) => { if (x == secondInner) return newInner; return x; }
-                        ).ToList();
+                    if (firstCycle.Lenght != 0)
+                        newInners[firstCycle] = newInners[firstCycle]
+                            .Select(
+                                (x) => { if (x == firstInner) return newInner; return x; }
+                            ).ToList();
+                    else
+                        newInners.Remove(firstCycle);
+
+                    if (secondCycle.Lenght != 0)
+                        newInners[secondCycle] = newInners[secondCycle]
+                            .Select(
+                                (x) => { if (x == secondInner) return newInner; return x; }
+                            ).ToList();
+                    else
+                        newInners.Remove(secondCycle);
                 }
             }
             else if ((countOfInners, countOfCycles) == (0, 2))
