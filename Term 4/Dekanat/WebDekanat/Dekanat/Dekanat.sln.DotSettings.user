@@ -1,0 +1,9 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/Highlighting/HighlightingSourceSnapshotLocation/@EntryValue">C:\Users\_9tailed_tozarin\AppData\Local\Temp\JetBrains\ReSharperPlatformVs17\vAny_dde284f9\CoverageData\_Dekanat.1870914875\Snapshot\snapshot.utdcvr</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=03f7a3be_002Da6b4_002D471b_002Dbd66_002D5383fb38c5db/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="StripedHashSetUnitTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::6ED2F0BD-A9E0-48AD-AAF8-D22F13C1F6F6::net6.0::DekanatUnitTests.StripedHashSetUnitTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::6ED2F0BD-A9E0-48AD-AAF8-D22F13C1F6F6::net6.0::DekanatUnitTests.PhasedCuckooHashSetUnitTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::6ED2F0BD-A9E0-48AD-AAF8-D22F13C1F6F6::net6.0::DekanatUnitTests.NodeUnitTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
