@@ -17,7 +17,7 @@ module Main =
         let pathToData = args[0]
         assert(dirExistCheck pathToData)
         assert(filesExistCheck pathToData)
-q
+
         let moviesRepository : MoviesRepository = Repository()
         let movies = MoviesReader(pathToData, moviesRepository).ReadAndIter()
 
