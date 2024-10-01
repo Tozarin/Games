@@ -1,5 +1,6 @@
 ﻿namespace IMDBSolver
 
+open System
 open System.Collections
 open System.Collections.Generic
 open System.IO
@@ -57,7 +58,7 @@ module Reader =
         new(dirPath, fileName, extn, logger) = { inherit Reader(dirPath, fileName, extn); logger = logger }
 
         abstract returnValue : unit -> 'ret
-        abstract split : string -> 'splitted
+        abstract split : ReadOnlySpan<char> -> 'splitted
         abstract preFunction : IEnumerator<string> -> unit
         abstract iterFunction : 'splitted -> unit
 
@@ -70,7 +71,7 @@ module Reader =
             self.preFunction(lines)
 
             while lines.MoveNext() do
-                let line = lines.Current
+                let line = lines.Current.ToCharArray()
                 line |> self.split |> self.iterFunction
 
                 (*let task = async { line |> self.split |> self.iterFunction }

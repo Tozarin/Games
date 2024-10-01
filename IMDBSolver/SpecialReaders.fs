@@ -54,12 +54,12 @@ module MoviesReader  =
         }
 
         override self.returnValue() = self.nameToMovie
-        override self.split (line : string) =
-            let id = Int32.Parse <| line.Substring(2, 7)
+        override self.split (line : ReadOnlySpan<char>) =
+            let id = Int32.Parse(line.Slice(2, 7))
             let firstIndex = 12 + if line[11] = '\t' then 0 else 1
-            let lastIndex = line.IndexOf('\t', firstIndex)
-            let name = line.Substring(firstIndex, lastIndex - firstIndex)
-            let region = line.Substring(lastIndex + 1, 2)
+            let lastIndex = MemoryExtensions.IndexOf(line.Slice firstIndex, '\t')
+            let name = line.Slice(firstIndex, lastIndex).ToString()
+            let region = line.Slice(firstIndex + lastIndex + 1, 2).ToString()
             (id, name, region)
         override self.preFunction lines =
             ignore <| lines.MoveNext()
@@ -130,11 +130,11 @@ module PersonsReader =
         }
 
         override self.returnValue() = true
-        override self.split (line : string) =
-            let id = Int32.Parse <| line.Substring(2, 7)
+        override self.split (line : ReadOnlySpan<char>) =
+            let id = Int32.Parse(line.Slice(2, 7))
             let name =
-                let lastIndex = line.IndexOf('\t', 10)
-                line.Substring(10, lastIndex - 10)
+                let lastIndex = MemoryExtensions.IndexOf(line.Slice 10, '\t')
+                line.Slice(10, lastIndex).ToString()
             ( id, name, None, None )
         override self.preFunction _ = ()
         override self.iterFunction splitted =
@@ -175,13 +175,13 @@ module PersonsReader =
         }
 
         override self.returnValue() = self.personsToMovie
-        override self.split (line : string) =
-            let movieId = int <| line.Substring(2, 7)
+        override self.split (line : ReadOnlySpan<char>) =
+            let movieId = Int32.Parse(line.Slice(2, 7))
             let startOfPerson = if line[11] = '\t' then 14 else 15
-            let personId = int <| line.Substring(startOfPerson, 7)
+            let personId = Int32.Parse(line.Slice(startOfPerson, 7))
             let startOfRole = startOfPerson + 8
-            let endOfRole = line.IndexOf('\t', startOfRole + 1)
-            let role = line.Substring(startOfRole, endOfRole - startOfRole)
+            let endOfRole = MemoryExtensions.IndexOf(line.Slice startOfRole, '\t')
+            let role = line.Slice(startOfRole, endOfRole).ToString()
             ( movieId, personId, role )
         override self.preFunction _ = ()
         override self.iterFunction splitted =
@@ -235,10 +235,10 @@ module TagsReadier =
         }
 
         override self.returnValue() = self.mapper
-        override self.split (line : string) =
+        override self.split (line : ReadOnlySpan<char>) =
             let indexOfComma = line.IndexOf(',')
-            let id = int32 <| line.Substring(0, indexOfComma)
-            let imdbId = int32 <| line.Substring(1 + indexOfComma, 7)
+            let id = Int32.Parse(line.Slice(0, indexOfComma))
+            let imdbId = Int32.Parse(line.Slice(1 + indexOfComma, 7))
             (imdbId, id)
         override self.preFunction _ = ()
         override self.iterFunction splitted =
@@ -258,10 +258,10 @@ module TagsReadier =
         }
 
         override self.returnValue() = true
-        override self.split (line : string) =
+        override self.split (line : ReadOnlySpan<char>) =
             let offset = line.IndexOf(',')
-            let id = int <| line.Substring(0, offset)
-            let name = line.Substring(offset + 1)
+            let id = Int32.Parse(line.Slice(0, offset))
+            let name = line.Slice(offset + 1).ToString()
             ( id, name )
         override self.preFunction _ = ()
         override self.iterFunction splitted =
@@ -298,13 +298,16 @@ module TagsReadier =
             }
 
         override self.returnValue() = self.tagToMovies
-        override self.split (line : string) =
+        override self.split (line : ReadOnlySpan<char>) =
             let offsetTag = line.IndexOf(',')
-            let offsetScore = line.IndexOf(',', offsetTag + 1)
+            let offsetScore =  MemoryExtensions.IndexOf(line.Slice(offsetTag + 1), ',')
 
-            let id = int32 <| line.Substring(0, offsetTag)
-            let tag = int32 <| line.Substring(offsetTag + 1, offsetScore - offsetTag - 1)
-            let score = float <| line.Substring(offsetScore + 1)
+            let id = Int32.Parse(line.Slice(0, offsetTag))
+            let tag = Int32.Parse(line.Slice(offsetTag + 1, offsetScore))
+
+            let scoreIndex = offsetTag + offsetScore + 2
+            let scoreSlice = min 5 <| line.Length - scoreIndex
+            let score = float(line.Slice(scoreIndex, scoreSlice).ToString())
             (id, tag, score)
         override self.preFunction _ = ()
         override self.iterFunction splitted =
@@ -341,9 +344,9 @@ module RatingsReader =
         }
 
         override self.returnValue() = true
-        override self.split (line : string) =
-            let id = int32 <| line.Substring(2, 7)
-            let score = float <| line.Substring(10, 4)
+        override self.split (line : ReadOnlySpan<char>) =
+            let id = Int32.Parse(line.Slice(2, 7))
+            let score = float(line.Slice(10, 4).ToString())
             (id, score)
         override self.preFunction _ = ()
         override self.iterFunction splitted =
