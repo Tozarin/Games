@@ -13,3 +13,4 @@ Specifications: top secret
 | split parsing | 1 | --- | 1.24 | 1.24 | 1.25 | 1.23 | 1.24 | 100% |
 | parsing without split | 2 | 23a9212 | 1.05 | 1.05 | 1.05 | 1.01 | 1.04 | 76% |
 | previos + async | 2 | --- | 2.08 | 1.57 | 1.50 | 1.51 | 1.56 | 139% |
+| Span insted string | 3 | 8404d4a | 1.14 | 1.15 | 1.13 | 1.13 | 1.14 | 88% |
