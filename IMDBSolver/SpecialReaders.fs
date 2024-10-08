@@ -43,7 +43,7 @@ module MoviesReader  =
                 dirPath,
                 fileName,
                 TSV,
-                SimpleLogger("Movies reader")
+                EmptyLogger()
                 )
 
             nameToMovie = Dictionary<string, Movie>()
@@ -123,7 +123,7 @@ module PersonsReader =
                 dirPath,
                 personsNamesFileName,
                 TXT,
-                SimpleLogger("Persons reader")
+                EmptyLogger()
                 )
 
             personsRepository = personsRepository
@@ -164,7 +164,7 @@ module PersonsReader =
                 dirPath,
                 personsCodesFileName,
                 TSV,
-                SimpleLogger("Actors-Directors reader")
+                EmptyLogger()
                 )
 
             personsToMovie = Dictionary<string, Movie list>()
@@ -228,7 +228,7 @@ module TagsReadier =
                 dirPath,
                 idsMapperFileName,
                 CSV,
-                SimpleLogger("Movie ids mapper reader")
+                EmptyLogger()
                 )
 
             mapper = Dictionary<int, int>()
@@ -253,7 +253,7 @@ module TagsReadier =
         val tagsRepository : TagsRepository
 
         new(dirPath : string, tagsRepository : TagsRepository) = {
-            inherit Parser<int * string, bool>(dirPath, tagCodesFileName, CSV, SimpleLogger("Tags reader"))
+            inherit Parser<int * string, bool>(dirPath, tagCodesFileName, CSV, EmptyLogger())
             tagsRepository = tagsRepository
         }
 
@@ -288,7 +288,7 @@ module TagsReadier =
                     dirPath,
                     tagScoresFileName,
                     CSV,
-                    SimpleLogger("Tag scores reader")
+                    EmptyLogger()
                     )
 
                 tagToMovies = Dictionary<string, Movie list>()
@@ -336,7 +336,7 @@ module RatingsReader =
 
         val moviesRepository : MoviesRepository
         new(dirPath : string, moviesRepository : MoviesRepository) = {
-            inherit Parser<int * float, bool>(dirPath, ratingsFileName, TSV, SimpleLogger("Raitings reader"))
+            inherit Parser<int * float, bool>(dirPath, ratingsFileName, TSV, EmptyLogger())
             moviesRepository = moviesRepository
         }
 
