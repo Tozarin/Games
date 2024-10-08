@@ -25,40 +25,17 @@ module Main =
         let directorsRepository : DirectorsRepository = Repository()
         let actorsRepository : ActorsRepository = Repository()
 
-        let moviesPersonsTask = async {
-            let! movies = Async.StartChild <| async { return MoviesReader(pathToData, moviesRepository).ReadAndIter() }
-            let! _ = Async.StartChild <| async { return PersonsReader(pathToData, personsRepository).ReadAndIter() }
-
-            let! rz = movies
-            return rz
-        }
-
-        let movies = Async.RunSynchronously moviesPersonsTask
+        let movies =  MoviesReader(pathToData, moviesRepository).ReadAndIter()
+        ignore <| PersonsReader(pathToData, personsRepository).ReadAndIter()
 
         let tagsRepository : TagsRepository = Repository()
 
-        let actDirMovIdsTagsTask = async {
-            let! actorsDirectors = Async.StartChild <| async { return ActorsDirectorsReader(pathToData, actorsRepository, directorsRepository, personsRepository, moviesRepository).ReadAndIter() }
-            let! moviesIds = Async.StartChild <| async { return MovieIdsMapperReader(pathToData).ReadAndIter() }
-            let! _ = Async.StartChild <| async { return TagsReader(pathToData, tagsRepository).ReadAndIter() }
+        let actorsDirectors =  ActorsDirectorsReader(pathToData, actorsRepository, directorsRepository, personsRepository, moviesRepository).ReadAndIter()
+        let moviesIds = MovieIdsMapperReader(pathToData).ReadAndIter()
+        ignore <| TagsReader(pathToData, tagsRepository).ReadAndIter()
 
-            let! adrz = actorsDirectors
-            let! mirz = moviesIds
-
-            return (adrz, mirz)
-        }
-
-        let actorsDirectors, moviesIds = Async.RunSynchronously actDirMovIdsTagsTask
-
-        let tagsRaitingsTask = async {
-            let! tagToMovies = Async.StartChild <| async { return TagScoresReader(pathToData, moviesIds, tagsRepository, moviesRepository).ReadAndIter() }
-            let! _ = Async.StartChild <| async { return RatingsReader(pathToData, moviesRepository).ReadAndIter() }
-
-            let! rz = tagToMovies
-            return rz
-        }
-
-        let tagToMovies = Async.RunSynchronously tagsRaitingsTask
+        let tagToMovies = TagScoresReader(pathToData, moviesIds, tagsRepository, moviesRepository).ReadAndIter()
+        ignore <| RatingsReader(pathToData, moviesRepository).ReadAndIter()
 
         printfn $"{DateTime.Now - sw}"
 

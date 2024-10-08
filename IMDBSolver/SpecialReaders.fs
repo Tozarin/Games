@@ -25,12 +25,15 @@ module MoviesReader  =
             Some name
         else None
 
+    let regionEq (region : Span<char>) (v : string) =
+        MemoryExtensions.Equals(region, v, StringComparison.Ordinal)
+
     let convertId (id : string) =
         // tt00...0[id]
         Int32.Parse <| id.TrimStart('t')
 
     type MoviesReader =
-        inherit Parser<int * string * string, Dictionary<string, Movie>>
+        inherit Parser<(int * MovieName) option, Dictionary<string, Movie>>
 
         val mutable currentId : int
         val mutable currentRUName : string option
@@ -39,7 +42,7 @@ module MoviesReader  =
         val nameToMovie : Dictionary<string, Movie>
         val movies : MoviesRepository
         new(dirPath, movies) = {
-            inherit Parser<int * string * string, Dictionary<string, Movie>>(
+            inherit Parser<(int * MovieName) option, Dictionary<string, Movie>>(
                 dirPath,
                 fileName,
                 TSV,
@@ -59,46 +62,49 @@ module MoviesReader  =
             let firstIndex = 12 + if line[11] = '\t' then 0 else 1
             let lastIndex = line.IndexOf('\t', firstIndex)
             let name = line.Substring(firstIndex, lastIndex - firstIndex)
-            let region = line.Substring(lastIndex + 1, 2)
-            (id, name, region)
+            match line.Substring(lastIndex + 1, 2) with
+            | region when region.Equals "RU" -> Some (id, RU name)
+            | region when
+                region.Equals "EN"
+                || region.Equals "US"
+                || region.Equals "AU" -> Some (id, US name)
+            | _ -> None
         override self.preFunction lines =
             ignore <| lines.MoveNext()
-            let id, name, region = self.split lines.Current
-            self.currentId <- id
-            self.currentRUName <- checkRUName name region
-            self.currentUSName <- checkUSName name region
 
         override self.iterFunction splitted =
-            let id, name, region = splitted
+            match splitted with
+            | Some (id, name) ->
+                if not (id = self.currentId) then
+                    match self.currentRUName, self.currentUSName with
+                        | Some ru, Some us ->
+                            let movie = Movie(self.currentId, BiLang (ru, us))
+                            self.movies.put movie
+                            self.nameToMovie[ru] <- movie
+                            self.nameToMovie[us] <- movie
 
-            if not (id = self.currentId) then
-                match self.currentRUName, self.currentUSName with
-                    | Some ru, Some us ->
-                        let movie = Movie(self.currentId, BiLang (ru, us))
-                        self.movies.put movie
-                        self.nameToMovie[ru] <- movie
-                        self.nameToMovie[us] <- movie
+                        | Some name, _ ->
+                            let movie = Movie(self.currentId, RU name)
+                            self.movies.put movie
+                            self.nameToMovie[name] <- movie
 
-                    | Some name, _ ->
-                        let movie = Movie(self.currentId, RU name)
-                        self.movies.put movie
-                        self.nameToMovie[name] <- movie
+                        | _, Some name ->
+                            let movie = Movie(self.currentId, US name)
+                            self.movies.put movie
+                            self.nameToMovie[name] <- movie
 
-                    | _, Some name ->
-                        let movie = Movie(self.currentId, US name)
-                        self.movies.put movie
-                        self.nameToMovie[name] <- movie
+                        | _ -> ()
 
-                    | _ -> ()
+                    self.currentId <- id
+                    self.currentRUName <- None
+                    self.currentUSName <- None
 
-                self.currentId <- id
-                self.currentRUName <- None
-                self.currentUSName <- None
+                match name with
+                | RU name -> self.currentRUName <- Some name
+                | US name ->  self.currentUSName <- Some name
+                | _ -> ()
 
-            if Option.isNone self.currentRUName then
-               self.currentRUName <- checkRUName name region
-            if Option.isNone self.currentUSName then
-               self.currentUSName <- checkUSName name region
+            | None -> ()
 
 module PersonsReader =
 
