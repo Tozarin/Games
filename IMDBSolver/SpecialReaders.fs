@@ -7,6 +7,7 @@ open IMDBSolver.Loggers
 open Microsoft.FSharp.Core
 open Reader
 open Repositories
+open Operators
 
 open System
 
@@ -63,7 +64,6 @@ module MoviesReader  =
         override self.split (line : string) =
             let firstIndex = 12 + if line[11] = '\t' then 0 else 1
             let lastIndex = line.IndexOf('\t', firstIndex)
-
             match line.Substring(lastIndex + 1, 2) with
             | region when checkRegion region ->
                 let id = int <| line.Substring(2, 7)
@@ -116,11 +116,11 @@ module PersonsReader =
         }
 
         override self.returnValue() = true
-        override self.split (line : ReadOnlySpan<char>) =
-            let id = Int32.Parse(line.Slice(2, 7))
+        override self.split (line : string) =
+            let id = int <| line.Substring(2, 7)
             let name =
-                let lastIndex = MemoryExtensions.IndexOf(line.Slice 10, '\t')
-                line.Slice(10, lastIndex).ToString()
+                let lastIndex = line.IndexOf('\t', 10)
+                line.Substring(10, lastIndex - 10)
             ( id, name, None, None )
         override self.preFunction _ = ()
         override self.iterFunction splitted =
@@ -137,7 +137,7 @@ module PersonsReader =
     let personsCodesFileName = "ActorsDirectorsCodes_IMDB"
 
     type ActorsDirectorsReader =
-        inherit Parser<int * int * string, Dictionary<string, Movie list>>
+        inherit Parser<(int * int * bool) option, Dictionary<string, Movie list>>
 
         val personsToMovie : Dictionary<string, Movie list>
         val actors : ActorsRepository
@@ -146,7 +146,7 @@ module PersonsReader =
         val movies : MoviesRepository
 
         new(dirPath, actors, directors, persons, movies) = {
-            inherit Parser<int * int * string, Dictionary<string, Movie list>>(
+            inherit Parser<(int * int * bool) option, Dictionary<string, Movie list>>(
                 dirPath,
                 personsCodesFileName,
                 TSV,
@@ -161,39 +161,71 @@ module PersonsReader =
         }
 
         override self.returnValue() = self.personsToMovie
-        override self.split (line : ReadOnlySpan<char>) =
-            let movieId = Int32.Parse(line.Slice(2, 7))
+        override self.split (line : string) =
             let startOfPerson = if line[11] = '\t' then 14 else 15
-            let personId = Int32.Parse(line.Slice(startOfPerson, 7))
             let startOfRole = startOfPerson + 8
-            let endOfRole = MemoryExtensions.IndexOf(line.Slice startOfRole, '\t')
-            let role = line.Slice(startOfRole, endOfRole).ToString()
-            ( movieId, personId, role )
+            let endOfRole = line.IndexOf('\t', startOfRole + 1)
+
+            let role = line.Substring(startOfRole, endOfRole - startOfRole)
+
+            match role with
+            | Actor ->
+                let movieId = int <| line.Substring(2, 7)
+                let personId = int <| line.Substring(startOfPerson, 7)
+                Some ( movieId, personId, true )
+            | Director ->
+                let movieId = int <| line.Substring(2, 7)
+                let personId = int <| line.Substring(startOfPerson, 7)
+                Some ( movieId, personId, false )
+
+            | Other -> None
+
+
         override self.preFunction _ = ()
         override self.iterFunction splitted =
-            let movieId, personId, category = splitted
-            let person = self.persons.getById personId
-            let movie = self.movies.getById movieId
+            match splitted with
+            | Some (movieId, personId, isActor) ->
+                let person = self.persons.getById personId
+                match person with
+                | Some person ->
+                    let movie = self.movies.getById movieId
+                    match movie with
+                    | Some movie ->
+                        let name = person.FullName
+                        self.personsToMovie[name] <-
+                            if self.personsToMovie.ContainsKey name then movie :: self.personsToMovie[name]
+                            else [movie]
 
-            match person, movie with
-            | Some person, Some movie ->
+                        if isActor then
+                           let actor = self.actors.getOrPut <| Actor(person)
+                           self.movies.change movie (fun (movie : Movie) -> movie.Actors <- Set.add actor movie.Actors)
+                        else
+                           let director = self.directors.getOrPut <| Director(person)
+                           self.movies.change movie (fun (movie : Movie) -> movie.Director <- Some director)
+                    | None -> ()
 
-                if isActorDirector category then
-                    let name = person.FullName
-                    self.personsToMovie[name] <-
-                        if self.personsToMovie.ContainsKey name then movie :: self.personsToMovie[name]
-                        else [movie]
+                | _ -> ()
 
-                match category with
-                | Actor ->
-                    let actor = self.actors.getOrPut <| Actor(person)
-                    self.movies.change movie (fun (movie : Movie) -> movie.Actors <- Set.add actor movie.Actors)
-                | Director ->
-                    let director = self.directors.getOrPut <| Director(person)
-                    self.movies.change movie (fun (movie : Movie) -> movie.Director <- Some director)
-                | Other -> ()
+            | None -> ()
 
-            | _ -> ()
+            // splitted ><> fun (movieId, personId, isActor) ->
+            //
+            //     self.persons.getById personId ><> fun person ->
+            //         self.movies.getById movieId ><> fun movie ->
+            //             let name = person.FullName
+            //             self.personsToMovie[name] <-
+            //                 if self.personsToMovie.ContainsKey name then movie :: self.personsToMovie[name]
+            //                 else [movie]
+            //
+            //             if isActor then
+            //                 let actor = self.actors.getOrPut <| Actor(person)
+            //                 self.movies.change movie (fun (movie : Movie) -> movie.Actors <- Set.add actor movie.Actors)
+            //             else
+            //                 let director = self.directors.getOrPut <| Director(person)
+            //                 self.movies.change movie (fun (movie : Movie) -> movie.Director <- Some director)
+            //             Some ()
+            // |> ignore
+
 
 module TagsReadier =
 
@@ -221,10 +253,10 @@ module TagsReadier =
         }
 
         override self.returnValue() = self.mapper
-        override self.split (line : ReadOnlySpan<char>) =
+        override self.split (line : string) =
             let indexOfComma = line.IndexOf(',')
-            let id = Int32.Parse(line.Slice(0, indexOfComma))
-            let imdbId = Int32.Parse(line.Slice(1 + indexOfComma, 7))
+            let id = int32 <| line.Substring(0, indexOfComma)
+            let imdbId = int32 <| line.Substring(1 + indexOfComma, 7)
             (imdbId, id)
         override self.preFunction _ = ()
         override self.iterFunction splitted =
@@ -244,10 +276,10 @@ module TagsReadier =
         }
 
         override self.returnValue() = true
-        override self.split (line : ReadOnlySpan<char>) =
+        override self.split (line : string) =
             let offset = line.IndexOf(',')
-            let id = Int32.Parse(line.Slice(0, offset))
-            let name = line.Slice(offset + 1).ToString()
+            let id = int <| line.Substring(0, offset)
+            let name = line.Substring(offset + 1)
             ( id, name )
         override self.preFunction _ = ()
         override self.iterFunction splitted =
@@ -256,7 +288,7 @@ module TagsReadier =
     let tagScoresFileName = "TagScores_MovieLens"
 
     type TagScoresReader =
-        inherit Parser<int * int * float, Dictionary<string, Movie list>>
+        inherit Parser<(int * int * float) option, Dictionary<string, Movie list>>
 
         val tagToMovies : Dictionary<string, Movie list>
 
@@ -270,7 +302,7 @@ module TagsReadier =
             tagsRepository : TagsRepository,
             moviesRepository : MoviesRepository
             ) = {
-                inherit Parser<int * int * float, Dictionary<string, Movie list>>(
+                inherit Parser<(int * int * float) option, Dictionary<string, Movie list>>(
                     dirPath,
                     tagScoresFileName,
                     CSV,
@@ -284,37 +316,65 @@ module TagsReadier =
             }
 
         override self.returnValue() = self.tagToMovies
-        override self.split (line : ReadOnlySpan<char>) =
+
+        override self.split (line : string) =
             let offsetTag = line.IndexOf(',')
-            let offsetScore =  MemoryExtensions.IndexOf(line.Slice(offsetTag + 1), ',')
+            let offsetScore = line.IndexOf(',', offsetTag + 1)
 
-            let id = Int32.Parse(line.Slice(0, offsetTag))
-            let tag = Int32.Parse(line.Slice(offsetTag + 1, offsetScore))
-
-            let scoreIndex = offsetTag + offsetScore + 2
-            let scoreSlice = min 5 <| line.Length - scoreIndex
-            let score = float(line.Slice(scoreIndex, scoreSlice).ToString())
-            (id, tag, score)
-        override self.preFunction _ = ()
-        override self.iterFunction splitted =
-            let movieId, tagId, score = splitted
+            let score = float <| line.Substring(offsetScore + 1)
 
             if score >= 0.5 then
-                let mutable imdbId = -1
-                ignore <| self.movieMapper.TryGetValue(movieId, &imdbId)
+                let id = int32 <| line.Substring(0, offsetTag)
+                let tag = int32 <| line.Substring(offsetTag + 1, offsetScore - offsetTag - 1)
+                Some (id, tag, score)
+            else
+                None
 
-                let tag = self.tagsRepository.getById tagId
-                let movie = self.moviesRepository.getById imdbId
 
-                match tag, movie with
-                | Some tag, Some movie ->
-                    let tagName = tag.Name
-                    self.tagToMovies[tagName] <-
-                        if self.tagToMovies.ContainsKey tagName then movie :: self.tagToMovies[tagName]
-                        else [movie]
+        override self.preFunction _ = ()
+        override self.iterFunction splitted =
+            match splitted with
+            | Some (movieId, tagId, score) ->
+                let isGet, imdbId = self.movieMapper.TryGetValue(movieId)
+                if isGet then
 
-                    self.moviesRepository.change movie (fun (movie : Movie) -> movie.Tags <- Set.add (tag, score) movie.Tags)
-                | _ -> ()
+                    let tag = self.tagsRepository.getById tagId
+                    match tag with
+                    | Some tag ->
+
+                        let movie = self.moviesRepository.getById imdbId
+                        match movie with
+                        | Some movie ->
+                            let tagName = tag.Name
+                            self.tagToMovies[tagName] <-
+                                if self.tagToMovies.ContainsKey tagName then movie :: self.tagToMovies[tagName]
+                                else [movie]
+
+                            self.moviesRepository.change movie (fun (movie : Movie) -> movie.Tags <- Set.add (tag, score) movie.Tags)
+                        | None -> ()
+
+                    | _ -> ()
+                else
+                    ()
+            | None -> ()
+
+
+            (*splitted ><> fun (movieId, tagId, score) ->
+                let isGet, imdbId = self.movieMapper.TryGetValue(movieId)
+
+                if isGet then Some () else None ><> fun _ ->
+                    self.tagsRepository.getById tagId ><> fun tag ->
+                        self.moviesRepository.getById imdbId ><> fun movie ->
+                            let tagName = tag.Name
+                            self.tagToMovies[tagName] <-
+                                if self.tagToMovies.ContainsKey tagName then movie :: self.tagToMovies[tagName]
+                                else [movie]
+
+                            self.moviesRepository.change movie (fun (movie : Movie) -> movie.Tags <- Set.add (tag, score) movie.Tags)
+                            Some ()
+
+            |> ignore*)
+
 
 module RatingsReader =
 
@@ -330,9 +390,9 @@ module RatingsReader =
         }
 
         override self.returnValue() = true
-        override self.split (line : ReadOnlySpan<char>) =
-            let id = Int32.Parse(line.Slice(2, 7))
-            let score = float(line.Slice(10, 4).ToString())
+        override self.split (line : string) =
+            let id = int32 <| line.Substring(2, 7)
+            let score = float <| line.Substring(10, 4)
             (id, score)
         override self.preFunction _ = ()
         override self.iterFunction splitted =

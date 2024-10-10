@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Utils.fs" />
         <Compile Include="DataClasses.fs" />
         <Compile Include="ConcurrentDictionary.fs" />
         <Compile Include="Logger.fs" />

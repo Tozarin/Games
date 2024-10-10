@@ -58,7 +58,7 @@ module Reader =
         new(dirPath, fileName, extn, logger) = { inherit Reader(dirPath, fileName, extn); logger = logger }
 
         abstract returnValue : unit -> 'ret
-        abstract split : ReadOnlySpan<char> -> 'splitted
+        abstract split : string -> 'splitted
         abstract preFunction : IEnumerator<string> -> unit
         abstract iterFunction : 'splitted -> unit
 
@@ -71,8 +71,7 @@ module Reader =
             self.preFunction(lines)
 
             while lines.MoveNext() do
-                let line = lines.Current.ToCharArray()
-                line |> self.split |> self.iterFunction
+                lines.Current |> self.split |> self.iterFunction
 
                 (*let task = async { line |> self.split |> self.iterFunction }
                 Async.Start task*)

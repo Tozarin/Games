@@ -2,6 +2,7 @@
 
 open System
 open DataClasses
+open Operators
 
 open System.Collections.Generic
 
@@ -62,7 +63,6 @@ module CI =
 
             printf "> "
             let line = Console.ReadLine()
-            let (><>) opt f = Option.bind f opt
 
             line |> self.matchCmd ><>
                 fun cmd -> List.iter (fun movie -> printfn "\n\n"; printfn $"{movie}")
