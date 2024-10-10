@@ -3,16 +3,12 @@
 open System
 
 module DataClasses =
-    type Person(id : int, fullName : string, birthYear : int option, deathYear : int option) =
+    type Person(id : int, fullName : string) =
         let id = id
         let fullName = fullName
-        let birthYear = birthYear
-        let deathYear = deathYear
 
         member self.Id = id
         member self.FullName = fullName
-        member self.BirthYear = birthYear
-        member self.DeathYear = deathYear
 
         interface IComparable<Person> with
             override self.CompareTo obj = compare self.Id obj.Id
@@ -26,9 +22,7 @@ module DataClasses =
         override self.Equals obj =
             (=) 0 <| (self :> IComparable).CompareTo obj
         override self.GetHashCode() = id.GetHashCode()
-        override self.ToString() =
-            let yearToString = function | Some year -> $"{year}" | None -> "#"
-            $"{id}. {fullName} ({yearToString birthYear} - {yearToString deathYear})"
+        override self.ToString() = $"{id}. {fullName}"
 
     type Actor(person : Person) =
         let person = person

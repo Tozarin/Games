@@ -39,10 +39,6 @@ module MoviesReader  =
     type MoviesReader =
         inherit Parser<(int * string) option, Dictionary<string, Movie>>
 
-        val mutable currentId : int
-        val mutable currentRUName : string option
-        val mutable currentUSName : string option
-
         val nameToMovie : Dictionary<string, Movie>
         val movies : MoviesRepository
         new(dirPath, movies) = {
@@ -55,9 +51,6 @@ module MoviesReader  =
 
             nameToMovie = Dictionary<string, Movie>()
             movies = movies
-            currentId = -1
-            currentRUName = None
-            currentUSName = None
         }
 
         override self.returnValue() = self.nameToMovie
@@ -101,11 +94,11 @@ module PersonsReader =
         else None
 
     type PersonsReader =
-        inherit Parser<int * string * int option * int option, bool>
+        inherit Parser<int * string, bool>
 
         val personsRepository : PersonsRepository
         new(dirPath, personsRepository) = {
-            inherit Parser<int * string * int option * int option, bool>(
+            inherit Parser<int * string, bool>(
                 dirPath,
                 personsNamesFileName,
                 TXT,
@@ -121,14 +114,14 @@ module PersonsReader =
             let name =
                 let lastIndex = line.IndexOf('\t', 10)
                 line.Substring(10, lastIndex - 10)
-            ( id, name, None, None )
+            ( id, name )
         override self.preFunction _ = ()
         override self.iterFunction splitted =
             self.personsRepository.put <| Person splitted
 
     let (|Actor|Director|Other|) = function
-        | "actor" | "actress" | "self" -> Actor
-        | "director" -> Director
+        | 'a' | 's' -> Actor
+        | 'd' -> Director
         | _ -> Other
 
     let isActorDirector = function
@@ -164,9 +157,8 @@ module PersonsReader =
         override self.split (line : string) =
             let startOfPerson = if line[11] = '\t' then 14 else 15
             let startOfRole = startOfPerson + 8
-            let endOfRole = line.IndexOf('\t', startOfRole + 1)
 
-            let role = line.Substring(startOfRole, endOfRole - startOfRole)
+            let role = line[startOfRole]
 
             match role with
             | Actor ->
@@ -178,7 +170,7 @@ module PersonsReader =
                 let personId = int <| line.Substring(startOfPerson, 7)
                 Some ( movieId, personId, false )
 
-            | Other -> None
+            | _ -> None
 
 
         override self.preFunction _ = ()
