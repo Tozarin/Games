@@ -7,6 +7,13 @@ module Loggers =
     type ILogger =
         abstract member Log : string -> unit
 
+    type EmptyLogger =
+
+        new() = {}
+
+        interface ILogger with
+            override self.Log _ = ()
+
     type SimpleLogger =
 
         val placeFrom : string

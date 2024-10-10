@@ -92,13 +92,12 @@ module DataClasses =
         override self.ToString() = $"{id}.{name}"
 
     type MovieName =
-        | RU of string
-        | US of string
+        | OneLang of string
         | BiLang of string * string
 
     type Movie(id : int, name : MovieName, actors : Actor Set, tags : (Tag * float) Set, director : Director option, score : float option) =
         let id = id
-        let name = name
+        let mutable name = name
         let mutable actors = actors
         let mutable tags = tags
         let mutable director = director
@@ -107,7 +106,14 @@ module DataClasses =
         new(id, name) = Movie(id, name, Set.empty, Set.empty, None, None)
 
         member self.Id = id
-        member self.Name = name
+        member self.Name
+            with get() = name
+            and set value = name <- value
+        member self.AddName name =
+            match self.Name with
+            | OneLang oldName ->
+                self.Name <- BiLang (oldName, name)
+            | _ -> ()
         member self.Actors
             with get() = actors
             and set value = actors <- value
@@ -121,18 +127,13 @@ module DataClasses =
             with get() = score
             and set value = score <- value
 
-        member self.AllNames =
-            match name with
-            | RU name | US name -> [name]
-            | BiLang (ru, us) -> [ru; us]
-
         override self.Equals obj =
             match obj with
             | :? Movie as obj -> self.Id = obj.Id
             | _ -> false
         override self.GetHashCode() = id.GetHashCode()
         override self.ToString() =
-            let name = List.head self.AllNames
+            let name = match self.Name with | OneLang name -> name | BiLang (fst, snd) -> $"{fst}/{snd}"
             let director = match self.Director with | Some d -> d.FullName | None -> "___"
             let tags = String.concat "\t" (Set.map (fun (t : Tag, _) -> t.Name) self.Tags)
             let actors = String.concat "\t" (Set.map (fun (a : Actor) -> a.FullName) self.Actors)

@@ -7,7 +7,6 @@ open IMDBSolver.Loggers
 open Microsoft.FSharp.Core
 open Reader
 open Repositories
-open MyConcurrentDictionary
 
 open System
 
@@ -25,12 +24,19 @@ module MoviesReader  =
             Some name
         else None
 
+    let regionEq (region : Span<char>) (v : string) =
+        MemoryExtensions.Equals(region, v, StringComparison.Ordinal)
+
+    let checkRegion = function
+        | "RU" | "US" | "EN" | "AU" -> true
+        | _ -> false
+
     let convertId (id : string) =
         // tt00...0[id]
         Int32.Parse <| id.TrimStart('t')
 
     type MoviesReader =
-        inherit Parser<int * string * string, Dictionary<string, Movie>>
+        inherit Parser<(int * string) option, Dictionary<string, Movie>>
 
         val mutable currentId : int
         val mutable currentRUName : string option
@@ -39,11 +45,11 @@ module MoviesReader  =
         val nameToMovie : Dictionary<string, Movie>
         val movies : MoviesRepository
         new(dirPath, movies) = {
-            inherit Parser<int * string * string, Dictionary<string, Movie>>(
+            inherit Parser<(int * string) option, Dictionary<string, Movie>>(
                 dirPath,
                 fileName,
                 TSV,
-                SimpleLogger("Movies reader")
+                SimpleLogger "Movies reader"
                 )
 
             nameToMovie = Dictionary<string, Movie>()
@@ -54,6 +60,7 @@ module MoviesReader  =
         }
 
         override self.returnValue() = self.nameToMovie
+<<<<<<< HEAD
         override self.split (line : ReadOnlySpan<char>) =
             let id = Int32.Parse(line.Slice(2, 7))
             let firstIndex = 12 + if line[11] = '\t' then 0 else 1
@@ -61,44 +68,33 @@ module MoviesReader  =
             let name = line.Slice(firstIndex, lastIndex).ToString()
             let region = line.Slice(firstIndex + lastIndex + 1, 2).ToString()
             (id, name, region)
+=======
+        override self.split (line : string) =
+            let firstIndex = 12 + if line[11] = '\t' then 0 else 1
+            let lastIndex = line.IndexOf('\t', firstIndex)
+
+            match line.Substring(lastIndex + 1, 2) with
+            | region when checkRegion region ->
+                let id = int <| line.Substring(2, 7)
+                let name = line.Substring(firstIndex, lastIndex - firstIndex)
+                Some (id, name)
+            | _ -> None
+>>>>>>> 57edb5c97b982aa1324c5d65cdd2a86129f902c8
         override self.preFunction lines =
             ignore <| lines.MoveNext()
-            let id, name, region = self.split lines.Current
-            self.currentId <- id
-            self.currentRUName <- checkRUName name region
-            self.currentUSName <- checkUSName name region
 
         override self.iterFunction splitted =
-            let id, name, region = splitted
-
-            if not (id = self.currentId) then
-                match self.currentRUName, self.currentUSName with
-                    | Some ru, Some us ->
-                        let movie = Movie(self.currentId, BiLang (ru, us))
-                        self.movies.put movie
-                        self.nameToMovie[ru] <- movie
-                        self.nameToMovie[us] <- movie
-
-                    | Some name, _ ->
-                        let movie = Movie(self.currentId, RU name)
-                        self.movies.put movie
-                        self.nameToMovie[name] <- movie
-
-                    | _, Some name ->
-                        let movie = Movie(self.currentId, US name)
-                        self.movies.put movie
-                        self.nameToMovie[name] <- movie
-
-                    | _ -> ()
-
-                self.currentId <- id
-                self.currentRUName <- None
-                self.currentUSName <- None
-
-            if Option.isNone self.currentRUName then
-               self.currentRUName <- checkRUName name region
-            if Option.isNone self.currentUSName then
-               self.currentUSName <- checkUSName name region
+            match splitted with
+            | Some (id, name) ->
+                match self.movies.getById id with
+                | Some movie ->
+                    movie.AddName name
+                    self.nameToMovie[name] <- movie
+                | None ->
+                    let movie = Movie(id, OneLang name)
+                    self.movies.put movie
+                    self.nameToMovie[name] <- movie
+            | None -> ()
 
 module PersonsReader =
 
@@ -123,7 +119,7 @@ module PersonsReader =
                 dirPath,
                 personsNamesFileName,
                 TXT,
-                SimpleLogger("Persons reader")
+                SimpleLogger "Persons reader"
                 )
 
             personsRepository = personsRepository
@@ -164,7 +160,7 @@ module PersonsReader =
                 dirPath,
                 personsCodesFileName,
                 TSV,
-                SimpleLogger("Actors-Directors reader")
+                SimpleLogger "Actors Directors reader"
                 )
 
             personsToMovie = Dictionary<string, Movie list>()
@@ -228,7 +224,7 @@ module TagsReadier =
                 dirPath,
                 idsMapperFileName,
                 CSV,
-                SimpleLogger("Movie ids mapper reader")
+                SimpleLogger "Tags reader"
                 )
 
             mapper = Dictionary<int, int>()
@@ -253,7 +249,7 @@ module TagsReadier =
         val tagsRepository : TagsRepository
 
         new(dirPath : string, tagsRepository : TagsRepository) = {
-            inherit Parser<int * string, bool>(dirPath, tagCodesFileName, CSV, SimpleLogger("Tags reader"))
+            inherit Parser<int * string, bool>(dirPath, tagCodesFileName, CSV, SimpleLogger "Tag Codes reader")
             tagsRepository = tagsRepository
         }
 
@@ -288,7 +284,7 @@ module TagsReadier =
                     dirPath,
                     tagScoresFileName,
                     CSV,
-                    SimpleLogger("Tag scores reader")
+                    SimpleLogger "Tags Scores reader"
                     )
 
                 tagToMovies = Dictionary<string, Movie list>()
@@ -339,7 +335,7 @@ module RatingsReader =
 
         val moviesRepository : MoviesRepository
         new(dirPath : string, moviesRepository : MoviesRepository) = {
-            inherit Parser<int * float, bool>(dirPath, ratingsFileName, TSV, SimpleLogger("Raitings reader"))
+            inherit Parser<int * float, bool>(dirPath, ratingsFileName, TSV, SimpleLogger "Ratings reader")
             moviesRepository = moviesRepository
         }
 
