@@ -1,4 +1,4 @@
-﻿namespace IMDBSolver
+namespace IMDBSolver
 
 open System.Collections.Generic
 open FileSignature
@@ -60,15 +60,6 @@ module MoviesReader  =
         }
 
         override self.returnValue() = self.nameToMovie
-<<<<<<< HEAD
-        override self.split (line : ReadOnlySpan<char>) =
-            let id = Int32.Parse(line.Slice(2, 7))
-            let firstIndex = 12 + if line[11] = '\t' then 0 else 1
-            let lastIndex = MemoryExtensions.IndexOf(line.Slice firstIndex, '\t')
-            let name = line.Slice(firstIndex, lastIndex).ToString()
-            let region = line.Slice(firstIndex + lastIndex + 1, 2).ToString()
-            (id, name, region)
-=======
         override self.split (line : string) =
             let firstIndex = 12 + if line[11] = '\t' then 0 else 1
             let lastIndex = line.IndexOf('\t', firstIndex)
@@ -79,7 +70,6 @@ module MoviesReader  =
                 let name = line.Substring(firstIndex, lastIndex - firstIndex)
                 Some (id, name)
             | _ -> None
->>>>>>> 57edb5c97b982aa1324c5d65cdd2a86129f902c8
         override self.preFunction lines =
             ignore <| lines.MoveNext()
 
