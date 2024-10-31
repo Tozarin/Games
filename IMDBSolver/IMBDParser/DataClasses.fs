@@ -1,4 +1,4 @@
-﻿namespace IMDBSolver
+﻿namespace Parser
 
 open System
 
@@ -120,6 +120,52 @@ module DataClasses =
         member self.Score
             with get() = score
             and set value = score <- value
+
+        // How good is m for self
+        // m score for self
+        member self.GeneralCompare (m : Movie) =
+            match m.Score with
+            | Some mS ->
+                self.Compare m mS
+            | _ -> -1.
+
+        member self.Compare (m : Movie) (mS : float) =
+
+            let jointActors, allActors = (
+                Set.intersect self.Actors m.Actors |> Set.count,
+                Set.count self.Actors |> (+) <| Set.count m.Actors)
+            let isJointDirector =
+                match self.Director, m.Director with
+                | Some s, Some d -> s.Equals d
+                | _ -> false
+            let jointTags = seq {
+                for selfT, selfScore in self.Tags do
+                    for mT, mScore in m.Tags do
+                        if selfT.Equals mT then
+                            (selfT, selfScore + mScore)
+            }
+
+            let actorsScore =
+                if allActors = 0
+                then 0.
+                else
+                    float(jointActors) / float(allActors - jointActors) // (0..1)
+
+            let dirScore = if isJointDirector then 1. else 0.
+
+            let tagsScore =
+                if Seq.isEmpty jointTags
+                then 0.
+                else
+                    Seq.fold (fun sum (_, score) -> sum + score) 0. jointTags
+                    |> float
+                    |> fun sum ->
+                        sum / float(Seq.length jointTags) // (0..2)
+
+            // (0..4) * 1/8 + (0..1) * 1/2 -> (0..1)
+            let score  = (dirScore + tagsScore + actorsScore) * 0.125 + mS * 0.5
+
+            score
 
         override self.Equals obj =
             match obj with

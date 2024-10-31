@@ -1,10 +1,10 @@
-﻿namespace IMDBSolver
+﻿namespace Parser
 
 open System
 open System.Collections
 open System.Collections.Generic
 open System.IO
-open IMDBSolver.Loggers
+open Loggers
 open Microsoft.FSharp.Core
 
 module FileSignature =

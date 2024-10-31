@@ -6,16 +6,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Utils.fs" />
-        <Compile Include="DataClasses.fs" />
-        <Compile Include="ConcurrentDictionary.fs" />
-        <Compile Include="Logger.fs" />
-        <Compile Include="Repositories.fs" />
-        <Compile Include="Reader.fs" />
-        <Compile Include="SpecialReaders.fs" />
-        <Compile Include="Checker.fs" />
         <Compile Include="CI.fs" />
         <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="Database\Database.fsproj" />
+      <ProjectReference Include="IMBDParser\IMBDParser.fsproj" />
     </ItemGroup>
 
 </Project>

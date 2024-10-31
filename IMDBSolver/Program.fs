@@ -1,44 +1,20 @@
 ﻿namespace IMDBSolver
 
-open System
-open Checker
-open IMDBSolver.Loggers
-open Repositories
-open MoviesReader
-open PersonsReader
-open TagsReadier
-open RatingsReader
 open CI
+open Database.Contex
 
 module Main =
     [<EntryPoint>]
     let main args =
         assert( not <| Array.isEmpty args)
-        let pathToData = args[0]
-        assert(dirExistCheck pathToData)
-        assert(filesExistCheck pathToData)
+        let pathToDatabase = args[0]
 
-        let sw = DateTime.Now
+        //imdb2
+        let connectionString = $"Host=localhost;Port=5432;Database={pathToDatabase};Username=postgres;Password=admin;"
+        let factory = DbFactory(connectionString)
+        use db = factory.NewConnection()
+        ignore <| db.Database.EnsureCreated()
 
-        let moviesRepository : MoviesRepository = Repository()
-        let personsRepository : PersonsRepository = Repository()
-        let directorsRepository : DirectorsRepository = Repository()
-        let actorsRepository : ActorsRepository = Repository()
-
-        let movies =  MoviesReader(pathToData, moviesRepository).ReadAndIter()
-        ignore <| PersonsReader(pathToData, personsRepository).ReadAndIter()
-
-        let tagsRepository : TagsRepository = Repository()
-
-        let actorsDirectors =  ActorsDirectorsReader(pathToData, actorsRepository, directorsRepository, personsRepository, moviesRepository).ReadAndIter()
-        let moviesIds = MovieIdsMapperReader(pathToData).ReadAndIter()
-        ignore <| TagsReader(pathToData, tagsRepository).ReadAndIter()
-
-        let tagToMovies = TagScoresReader(pathToData, moviesIds, tagsRepository, moviesRepository).ReadAndIter()
-        ignore <| RatingsReader(pathToData, moviesRepository).ReadAndIter()
-
-        printfn $"{DateTime.Now - sw}"
-
-        SimpleCI(movies, actorsDirectors, tagToMovies).startLoop()
+        SimpleCI2(factory).startLoop()
 
         0

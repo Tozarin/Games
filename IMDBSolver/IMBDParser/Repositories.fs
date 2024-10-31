@@ -1,4 +1,4 @@
-﻿namespace IMDBSolver
+﻿namespace Parser
 
 
 open DataClasses

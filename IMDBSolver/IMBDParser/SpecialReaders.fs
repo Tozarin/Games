@@ -1,13 +1,12 @@
-namespace IMDBSolver
+namespace Parser
 
 open System.Collections.Generic
 open FileSignature
-open IMDBSolver.DataClasses
-open IMDBSolver.Loggers
+open DataClasses
+open Loggers
 open Microsoft.FSharp.Core
 open Reader
 open Repositories
-open Operators
 
 open System
 
@@ -37,19 +36,19 @@ module MoviesReader  =
         Int32.Parse <| id.TrimStart('t')
 
     type MoviesReader =
-        inherit Parser<(int * string) option, Dictionary<string, Movie>>
+        inherit Parser<(int * string) option, Dictionary<int, Movie>>
 
-        val nameToMovie : Dictionary<string, Movie>
+        val nameToMovie : Dictionary<int, Movie>
         val movies : MoviesRepository
         new(dirPath, movies) = {
-            inherit Parser<(int * string) option, Dictionary<string, Movie>>(
+            inherit Parser<(int * string) option, Dictionary<int, Movie>>(
                 dirPath,
                 fileName,
                 TSV,
                 SimpleLogger "Movies reader"
                 )
 
-            nameToMovie = Dictionary<string, Movie>()
+            nameToMovie = Dictionary<int, Movie>()
             movies = movies
         }
 
@@ -72,11 +71,11 @@ module MoviesReader  =
                 match self.movies.getById id with
                 | Some movie ->
                     movie.AddName name
-                    self.nameToMovie[name] <- movie
+                    //self.nameToMovie[name] <- movie
                 | None ->
                     let movie = Movie(id, OneLang name)
                     self.movies.put movie
-                    self.nameToMovie[name] <- movie
+                    self.nameToMovie[id] <- movie
             | None -> ()
 
 module PersonsReader =
@@ -129,24 +128,28 @@ module PersonsReader =
 
     let personsCodesFileName = "ActorsDirectorsCodes_IMDB"
 
-    type ActorsDirectorsReader =
-        inherit Parser<(int * int * bool) option, Dictionary<string, Movie list>>
+    type AsRole =
+        | AsActor of Movie
+        | AsDirector of Movie
 
-        val personsToMovie : Dictionary<string, Movie list>
+    type ActorsDirectorsReader =
+        inherit Parser<(int * int * bool) option, Dictionary<Person, AsRole list>>
+
+        val personsToMovie : Dictionary<Person, AsRole list>
         val actors : ActorsRepository
         val directors : DirectorsRepository
         val persons : PersonsRepository
         val movies : MoviesRepository
 
         new(dirPath, actors, directors, persons, movies) = {
-            inherit Parser<(int * int * bool) option, Dictionary<string, Movie list>>(
+            inherit Parser<(int * int * bool) option, Dictionary<Person, AsRole list>>(
                 dirPath,
                 personsCodesFileName,
                 TSV,
                 SimpleLogger "Actors Directors reader"
                 )
 
-            personsToMovie = Dictionary<string, Movie list>()
+            personsToMovie = Dictionary<Person, AsRole list>()
             actors = actors
             directors = directors
             persons = persons
@@ -183,10 +186,10 @@ module PersonsReader =
                     let movie = self.movies.getById movieId
                     match movie with
                     | Some movie ->
-                        let name = person.FullName
-                        self.personsToMovie[name] <-
-                            if self.personsToMovie.ContainsKey name then movie :: self.personsToMovie[name]
-                            else [movie]
+                        self.personsToMovie[person] <-
+                            let asRole = if isActor then AsActor movie else AsDirector movie
+                            if self.personsToMovie.ContainsKey person then asRole :: self.personsToMovie[person]
+                            else [asRole]
 
                         if isActor then
                            let actor = self.actors.getOrPut <| Actor(person)
@@ -280,9 +283,9 @@ module TagsReadier =
     let tagScoresFileName = "TagScores_MovieLens"
 
     type TagScoresReader =
-        inherit Parser<(int * int * float) option, Dictionary<string, Movie list>>
+        inherit Parser<(int * int * float) option, Dictionary<Tag, (Movie * float) list>>
 
-        val tagToMovies : Dictionary<string, Movie list>
+        val tagToMovies : Dictionary<Tag, (Movie * float) list>
 
         val movieMapper : Dictionary<int, int>
         val tagsRepository : TagsRepository
@@ -294,14 +297,14 @@ module TagsReadier =
             tagsRepository : TagsRepository,
             moviesRepository : MoviesRepository
             ) = {
-                inherit Parser<(int * int * float) option, Dictionary<string, Movie list>>(
+                inherit Parser<(int * int * float) option, Dictionary<Tag, (Movie * float) list>>(
                     dirPath,
                     tagScoresFileName,
                     CSV,
                     SimpleLogger "Tags Scores reader"
                     )
 
-                tagToMovies = Dictionary<string, Movie list>()
+                tagToMovies = Dictionary<Tag, (Movie * float) list>()
                 movieMapper = movieMapper
                 tagsRepository = tagsRepository
                 moviesRepository = moviesRepository
@@ -337,10 +340,9 @@ module TagsReadier =
                         let movie = self.moviesRepository.getById imdbId
                         match movie with
                         | Some movie ->
-                            let tagName = tag.Name
-                            self.tagToMovies[tagName] <-
-                                if self.tagToMovies.ContainsKey tagName then movie :: self.tagToMovies[tagName]
-                                else [movie]
+                            self.tagToMovies[tag] <-
+                                if self.tagToMovies.ContainsKey tag then (movie, score) :: self.tagToMovies[tag]
+                                else [(movie, score)]
 
                             self.moviesRepository.change movie (fun (movie : Movie) -> movie.Tags <- Set.add (tag, score) movie.Tags)
                         | None -> ()
