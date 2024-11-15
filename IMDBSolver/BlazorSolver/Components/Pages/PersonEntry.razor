@@ -1,0 +1,56 @@
+﻿@using Database
+@using BlazorSolver.Components.Util
+@using Microsoft.IdentityModel.Tokens
+@attribute [StreamRendering(true)]
+
+<div class="person-entry">
+    <div class="person-header-box">
+        <span class="person-title"> <a href=@($"/person/{Entry.Name}")> @Entry.Name  </a> </span>
+    </div>
+    <div class="titled-list">
+        <span class="person-section-title"> Movies </span>
+        @if (_movies is null)
+        {
+            <Load/>
+        } else if (_movies.Count() > 10)
+        {
+            <div class="actors-list">
+                @foreach (var m in _movies.Take(10))
+                {
+                    <a href=@($"/movie/{m.Name}")> @m.Name </a>
+                }
+                ...
+            </div>
+        } else if (_movies.Any())
+        {
+            <div class="actors-list">
+                @foreach (var m in _movies)
+                {
+                    <a href=@($"/movie/{m.Name}")> @m.Name </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public MPerson Entry { get; set; }
+    [Parameter]
+    public Contex Db { get; set; }
+    private IEnumerable<MMovie>? _movies;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var asActors = fromNullable(Entry.LoadAsActor(Db));
+        var asDirectors = fromNullable(Entry.LoadAsDirector(Db));
+        await Task.Delay(1);
+        _movies = asActors.Concat(asDirectors);
+        StateHasChanged();
+    }
+
+    private List<MMovie> fromNullable(IEnumerable<MMovie> l)
+    {
+        return l.IsNullOrEmpty() ? new List<MMovie>() : l.ToList();
+    }
+}

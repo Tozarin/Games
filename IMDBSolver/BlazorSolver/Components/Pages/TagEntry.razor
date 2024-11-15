@@ -1,0 +1,48 @@
+﻿@using Database
+@using BlazorSolver.Components.Util
+@attribute [StreamRendering(true)]
+
+<div class="tag-entry">
+    <div class="tag-header-box">
+        <span class="tag-title"> <a href=@($"/tag/{Entry.Name}")> @Entry.Name </a>  </span>
+    </div>
+    <div class="titled-list">
+        <span class="tag-section-title"> Movies </span>
+        @if (_movies is null)
+        {
+            <Load/>
+        } else if (_movies.Count() > 10)
+        {
+            <div class="movies-list">
+                @foreach (var m in _movies.Take(10))
+                {
+                    <a href=@($"/movie/{m.Name}")> @m.Name </a>
+                }
+                ...
+            </div>
+        } else if (_movies.Any())
+        {
+            <div class="movies-list">
+                @foreach (var m in _movies)
+                {
+                    <a href=@($"/movie/{m.Name}")> @m.Name </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public MTag Entry { get; set; }
+    [Parameter]
+    public Contex Db { get; set; }
+    private IEnumerable<MMovie>? _movies;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _movies = Entry.LoadMovies(Db);
+        await Task.Delay(1);
+        StateHasChanged();
+    }
+}

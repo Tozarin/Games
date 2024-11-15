@@ -1,7 +1,7 @@
 ﻿namespace IMDBSolver
 
 open CI
-open Database.Contex
+open Database
 
 module Main =
     [<EntryPoint>]
@@ -10,10 +10,9 @@ module Main =
         let pathToDatabase = args[0]
 
         //imdb2
-        let connectionString = $"Host=localhost;Port=5432;Database={pathToDatabase};Username=postgres;Password=admin;"
-        let factory = DbFactory(connectionString)
-        use db = factory.NewConnection()
-        ignore <| db.Database.EnsureCreated()
+        let connectionString = $"Host=localhost;Port=5432;Database={pathToDatabase};Username=postgres;Password=admin;Timeout=600;CommandTimeout=600;Include Error Detail=true;"
+        let factory = ContexFactory(connectionString)
+        use db = factory.NewContex()
 
         SimpleCI2(factory).startLoop()
 

@@ -1,0 +1,24 @@
+﻿@page "/tags"
+@page "/tags/{page:int}"
+@using Database
+@attribute [StreamRendering(true)]
+
+<Search Address="/tags"/>
+
+<Pagination
+    Title="Tags"
+    Data="@Queries.findTagByPartOfName(_ctx, Filter ?? "")"
+    T="MTag"
+    Page="@(Page ?? 0)"
+    Address="/tags"
+    PageContentType="@typeof(TagEntry)"
+    Contex="@_ctx"
+/>
+
+@code {
+    [Parameter]
+    public int? Page { get; set; }
+    [SupplyParameterFromQuery]
+    public string? Filter { get; set; }
+    private Contex _ctx = new ContexFactory().NewContex();
+}

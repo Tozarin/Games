@@ -1,0 +1,50 @@
+﻿@using Database
+
+<div class="movie-entry">
+    <div class="movie-header-box">
+        <span class="movie-title"> <a href=@($"/movie/{Entry.Name}")> @Entry.Name </a></span>
+        <span class="movie-rating"> [@Entry.Score ✭] </span>
+    </div>
+    <div class="titled-list">
+        <span class="movie-section-title"> Actors </span>
+        <div class="actors-list">
+            @foreach (var a in Entry.LoadActors(Db))
+            {
+                <a href=@($"/person/{a.Name}")> @a.Name </a>
+            }
+        </div>
+    </div>
+    <div class="titled-list">
+        <span class="movie-section-title"> Directors </span>
+        <div class="directors-list">
+            @foreach (var d in Entry.LoadDirectors(Db))
+            {
+                <a href=@($"/person/{d.Name}")> @d.Name </a>
+            }
+        </div>
+    </div>
+    @if (Entry.LoadTags(Db).Count() < 10) {
+        <div class="tags-list">
+            @foreach (var t in Entry.Tags)
+            {
+                <a class="tag-link" href=@($"/tag/{t.Name}")> @t.Name </a>
+            }
+        </div>
+    } else {
+        <div class="tags-list">
+            @foreach (var t in Entry.Tags.Take(10))
+            {
+                <a class="tag-link" href=@($"/tag/{t.Name}")> @t.Name </a>
+            }
+            ...
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public MMovie Entry { get; set; }
+    [Parameter]
+    public Contex Db { get; set; }
+}

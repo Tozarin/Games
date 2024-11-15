@@ -1,0 +1,34 @@
+﻿.titled-list {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.movie-section-title{
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.actors-list {
+    display: inline-block;
+}
+
+.directors-list {
+    display: inline-block;
+}
+
+.tags-list {
+    display: inline-block;
+}
+
+.similar-list {
+    display: flex;
+    flex-direction: column;
+}
+
+a {
+    padding-right: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 300;
+    text-decoration: none;
+}

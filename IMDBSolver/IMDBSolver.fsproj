@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="Database\Database.fsproj" />
+      <ProjectReference Include="DatabaseAPI\DatabaseAPI.fsproj" />
       <ProjectReference Include="IMBDParser\IMBDParser.fsproj" />
     </ItemGroup>
 

@@ -1,0 +1,24 @@
+﻿@page "/people"
+@page "/people/{page:int}"
+@using Database
+@attribute [StreamRendering(true)]
+
+<Search Address="/people"/>
+
+<Pagination
+    Title="People"
+    Data="@Queries.findPersonByPartOfName(_ctx, Filter ?? "")"
+    T="MPerson"
+    Page="@(Page ?? 0)"
+    Address="/people"
+    PageContentType="@typeof(PersonEntry)"
+    Contex="@_ctx"
+    />
+
+@code {
+    [Parameter]
+    public int? Page { get; set; }
+    [SupplyParameterFromQuery]
+    public string? Filter { get; set; }
+    private Contex _ctx = new ContexFactory().NewContex();
+}

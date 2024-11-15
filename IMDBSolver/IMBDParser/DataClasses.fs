@@ -1,6 +1,7 @@
 ﻿namespace Parser
 
 open System
+open System.Diagnostics
 
 module DataClasses =
     type Person(id : int, fullName : string) =
@@ -64,12 +65,16 @@ module DataClasses =
         override self.GetHashCode() = person.GetHashCode()
         override self.ToString() = $"Director {person}"
 
-    type Tag(id : int, name : string) =
+    type Tag(id : int, name : string, score : float) =
         let id = id
         let name = name
+        let score = score
+
+        new(t : Tag, score : float) = Tag(t.Id, t.Name, score)
 
         member self.Id = id
         member self.Name = name
+        member self.Score = score
 
         interface IComparable<Tag> with
             override self.CompareTo obj = compare self.Id obj.Id
@@ -89,7 +94,7 @@ module DataClasses =
         | OneLang of string
         | BiLang of string * string
 
-    type Movie(id : int, name : MovieName, actors : Actor Set, tags : (Tag * float) Set, director : Director option, score : float option) =
+    type Movie(id : int, name : MovieName, actors : Actor Set, tags : Tag Set, director : Director Set, score : float option) =
         let id = id
         let mutable name = name
         let mutable actors = actors
@@ -97,7 +102,7 @@ module DataClasses =
         let mutable director = director
         let mutable score = score
 
-        new(id, name) = Movie(id, name, Set.empty, Set.empty, None, None)
+        new(id, name) = Movie(id, name, Set.empty, Set.empty, Set.empty, None)
 
         member self.Id = id
         member self.Name
@@ -121,51 +126,32 @@ module DataClasses =
             with get() = score
             and set value = score <- value
 
-        // How good is m for self
-        // m score for self
-        member self.GeneralCompare (m : Movie) =
-            match m.Score with
-            | Some mS ->
-                self.Compare m mS
-            | _ -> -1.
+        member self.NonOptionScore =
+            match self.Score with
+            | Some s -> s
+            | None -> -1.
+        member self.GetNames =
+            match self.Name with
+            | OneLang name -> name, ""
+            | BiLang (fst, snd) -> fst, snd
 
-        member self.Compare (m : Movie) (mS : float) =
+        member self.NamesToString =
+            match self.GetNames with
+            | name, "" -> name
+            | fst, snd -> $"{fst} ({snd})"
+        member self.ScoreToString =
+            match self.Score with
+            | Some score -> sprintf "%.4f" score
+            | None -> "None"
 
-            let jointActors, allActors = (
-                Set.intersect self.Actors m.Actors |> Set.count,
-                Set.count self.Actors |> (+) <| Set.count m.Actors)
-            let isJointDirector =
-                match self.Director, m.Director with
-                | Some s, Some d -> s.Equals d
-                | _ -> false
-            let jointTags = seq {
-                for selfT, selfScore in self.Tags do
-                    for mT, mScore in m.Tags do
-                        if selfT.Equals mT then
-                            (selfT, selfScore + mScore)
-            }
-
-            let actorsScore =
-                if allActors = 0
-                then 0.
-                else
-                    float(jointActors) / float(allActors - jointActors) // (0..1)
-
-            let dirScore = if isJointDirector then 1. else 0.
-
-            let tagsScore =
-                if Seq.isEmpty jointTags
-                then 0.
-                else
-                    Seq.fold (fun sum (_, score) -> sum + score) 0. jointTags
-                    |> float
-                    |> fun sum ->
-                        sum / float(Seq.length jointTags) // (0..2)
-
-            // (0..4) * 1/8 + (0..1) * 1/2 -> (0..1)
-            let score  = (dirScore + tagsScore + actorsScore) * 0.125 + mS * 0.5
-
-            score
+        interface IComparable<Movie> with
+            override self.CompareTo obj = compare self.Id obj.Id
+        interface IComparable with
+            override self.CompareTo obj =
+                match obj with
+                | null -> 1
+                | :? Movie as obj -> (self :> IComparable<_>).CompareTo obj
+                | _ -> 1
 
         override self.Equals obj =
             match obj with
@@ -174,8 +160,8 @@ module DataClasses =
         override self.GetHashCode() = id.GetHashCode()
         override self.ToString() =
             let name = match self.Name with | OneLang name -> name | BiLang (fst, snd) -> $"{fst}/{snd}"
-            let director = match self.Director with | Some d -> d.FullName | None -> "___"
-            let tags = String.concat "\t" (Set.map (fun (t : Tag, _) -> t.Name) self.Tags)
+            let director = String.concat "\t" (Set.map (fun (a : Director) -> a.FullName) self.Director)
+            let tags = String.concat "\t" (Set.map (fun (t : Tag) -> t.Name) self.Tags)
             let actors = String.concat "\t" (Set.map (fun (a : Actor) -> a.FullName) self.Actors)
 
             $"{id}. {name}: {score}

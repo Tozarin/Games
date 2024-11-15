@@ -1,12 +1,10 @@
 ﻿namespace IMDBSolver
 
-open Database.Model
 open Parser
 open System
 open DataClasses
 open Operators
 open Database
-open Contex
 open Queries
 open Checker
 
@@ -19,22 +17,26 @@ module CI =
         | MoviesByDirector of string
         | MoviesByTag of string
         | LoadByPath of string
+        | SimilarMovies of string
 
     type returnType =
-        | Movie of Movie
+        | MovieOpt of Movie Option
         | Movies of List<Movie>
+        | NameAndScore of string * float32
+        | NameAndScores of List<string * float32>
         | Error of string
         | Unit
 
-    let (|Movie|Actor|Director|Tag|Load|Other|) = function
+    let (|Movie|Actor|Director|Tag|Load|Top|Other|) = function
         | "m" -> Movie
         | "a" -> Actor
         | "d" -> Director
         | "t" -> Tag
         | "l" -> Load
+        | "top" -> Top
         | _ -> Other
 
-    type SimpleCI2(connectionFactory : DbFactory) =
+    type SimpleCI2(connectionFactory : ContexFactory) =
 
         member self.getMoviesByName name =
             Movies <| findMoviesByName connectionFactory name
@@ -48,8 +50,11 @@ module CI =
         member self.getMoviesByTag name =
             Movies <| findMoviesByTagName connectionFactory name
 
+        member self.getSimilarMoviesBy name =
+            NameAndScores <| getSimilarMoviesByName connectionFactory name
+
         member self.Reload path =
-            use contex = connectionFactory.NewConnection()
+            use contex = connectionFactory.NewContex()
             ignore <| contex.Database.EnsureDeleted()
             ignore <| contex.Database.EnsureCreated()
 
@@ -70,6 +75,7 @@ module CI =
                 | Director -> fun name -> Some <| MoviesByDirector name
                 | Tag -> fun name -> Some <| MoviesByTag name
                 | Load -> fun path -> Some <| LoadByPath path
+                | Top -> fun name -> Some <| SimilarMovies name
                 | Other -> fun _ -> None
             else None
 
@@ -79,10 +85,18 @@ module CI =
             | MoviesByDirector name -> self.getMoviesByDirector name
             | MoviesByTag name -> self.getMoviesByTag name
             | LoadByPath path -> self.Reload path
+            | SimilarMovies name -> self.getSimilarMoviesBy name
 
         member self.resolveRezult = function
-            | returnType.Movie movie -> printfn "\n\n"; printfn $"{movie}"
-            | returnType.Movies ms -> ms.ForEach(fun movie -> printfn "\n\n"; printfn $"{movie}")
+            | returnType.MovieOpt movie -> (
+                match movie with
+                | Some movie -> printfn "\n"; printfn $"{movie}"
+                | None -> printfn "\n"; printfn "No such movie"
+                    )
+            | returnType.Movies ms -> ms.ForEach(fun movie -> printfn "\n"; printfn $"{movie}")
+            | returnType.NameAndScore (name, score) -> printfn "\n"; printfn $"| {score} | {name} |"
+            | returnType.NameAndScores nss -> printfn "\n"; nss.ForEach (fun (name, score) ->
+                printfn $"| {score} | {name} |")
             | returnType.Error msg ->
                 Console.ForegroundColor <- ConsoleColor.Red
                 Console.WriteLine $"{msg.ToUpper()}"
@@ -91,7 +105,7 @@ module CI =
 
         member self.startLoop() =
 
-            printf "> "
+            printf "~> "
             let line = Console.ReadLine()
 
             line |> self.matchCmd ><>

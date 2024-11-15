@@ -1,0 +1,63 @@
+﻿@page "/person/{Id}"
+@using BlazorSolver.Components.Util
+@using Database
+@attribute [StreamRendering(true)]
+
+@if (_person is null)
+{
+    <Load/>
+}
+else
+{
+    <h1> @_person.Name</h1>
+    <h1> Was actor in </h1>
+    @if (_asActor is null)
+    {
+        <Load/>
+    }
+    else
+    {
+        <div class="movie-list">
+            @foreach (var m in _person.AsActor)
+            {
+                <a href=@($"/movie/{m.Name}")> @m.Name </a>
+            }
+        </div>
+    }
+    <h1> Was director in </h1>
+    @if (_asDirector is null)
+    {
+        <Load/>
+    }
+    else
+    {
+        <div class="movie-list">
+            @foreach (var m in _person.AsDirector)
+            {
+                <a href=@($"/movie/{m.Name}")> @m.Name </a>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private Contex _ctx = new ContexFactory().NewContex();
+    private MPerson? _person;
+    private IEnumerable<MMovie>? _asActor;
+    private IEnumerable<MMovie>? _asDirector;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _person = Queries.findPersonByName(_ctx, Id).FirstOrDefault();
+        StateHasChanged();
+
+        _asActor = await Task.Run(() => _person.LoadAsActor(_ctx));
+        StateHasChanged();
+
+        _asDirector = await Task.Run(() => _person.LoadAsDirector(_ctx));
+        StateHasChanged();
+    }
+}

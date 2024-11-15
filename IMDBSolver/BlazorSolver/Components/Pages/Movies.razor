@@ -1,0 +1,25 @@
+﻿@page "/"
+@page "/movies"
+@page "/movies/{page:int}"
+@using Database
+@attribute [StreamRendering(true)]
+
+<Search Address="/movies"/>
+
+<Pagination
+    Title="Movies"
+    Data="@Queries.findByPartOfName(_ctx, Filter ?? "")"
+    T="MMovie"
+    Page="@(Page ?? 0)"
+    Address="/movies"
+    PageContentType="@typeof(MovieEntry)"
+    Contex="@_ctx"
+    />
+
+@code {
+    [Parameter]
+    public int? Page { get; set; }
+    [SupplyParameterFromQuery]
+    public string? Filter { get; set; }
+    private Contex _ctx = new ContexFactory().NewContex();
+}

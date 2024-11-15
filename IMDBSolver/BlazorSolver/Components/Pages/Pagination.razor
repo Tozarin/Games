@@ -1,0 +1,76 @@
+﻿@typeparam T where T : class
+@using BlazorSolver.Components.Util
+@using Database
+@attribute [StreamRendering(true)]
+
+<h1>@Title @(Page * _size) ~ @((Page + 1) * _size)</h1>
+
+@if (_error is not null)
+{
+    <span class="error"> @_error </span>
+}
+
+@if (_load || _entries is null)
+{
+    <Load/>
+}
+else
+{
+    <div class="pagination-list">
+        @foreach (var e in _entries)
+        {
+            <DynamicComponent Type="@PageContentType" Parameters="@Parameters(e)"/>
+        }
+    </div>
+    <PaginationControl Address="@Address" Page="@Page" PageUpperBoundary="@_max"/>
+}
+
+@code {
+    [Parameter]
+    public IQueryable<T> Data { get; set; }
+    [Parameter]
+    public int Page { get; set; }
+    [Parameter]
+    public Type PageContentType { get; set; }
+    [Parameter]
+    public string Address { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+    [Parameter]
+    public Contex Contex { get; set; }
+
+    private int _size;
+    private int _max;
+    private IEnumerable<T>? _entries;
+    private string? _error;
+    private bool _load;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Data is null) throw new ArgumentException();
+        _load = true;
+
+        var page = new Page<T>(Data);
+        _size = page.Size;
+        _max = page.LastNum;
+
+        try
+        {
+            _entries = await page.GetPage(Page);
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            _error = e.Message;
+        }
+        finally
+        {
+            _load = false;
+        }
+    }
+
+    private Dictionary<string, object> Parameters(object entry) =>
+        new Dictionary<string, object> { { "Entry", entry }, { "Db", Contex} };
+}

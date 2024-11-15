@@ -2,6 +2,14 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IMDBSolver", "IMDBSolver.fsproj", "{FE2D09A0-1C66-4D7A-AF92-405AC0673C31}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DatabaseAPI", "DatabaseAPI\DatabaseAPI.fsproj", "{74566700-1B1C-4298-9366-96B12456491E}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IMBDParser", "IMBDParser\IMBDParser.fsproj", "{1683C373-301A-42F8-BFE5-89EE0DA9739C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database", "Database\Database.csproj", "{C0A4B41C-1EE8-424A-89E5-0215D6DF3168}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorSolver", "BlazorSolver\BlazorSolver.csproj", "{E2579215-C1DC-4864-9629-AEF6BF243AD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +20,21 @@ Global
 		{FE2D09A0-1C66-4D7A-AF92-405AC0673C31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE2D09A0-1C66-4D7A-AF92-405AC0673C31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE2D09A0-1C66-4D7A-AF92-405AC0673C31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74566700-1B1C-4298-9366-96B12456491E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74566700-1B1C-4298-9366-96B12456491E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74566700-1B1C-4298-9366-96B12456491E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74566700-1B1C-4298-9366-96B12456491E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1683C373-301A-42F8-BFE5-89EE0DA9739C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1683C373-301A-42F8-BFE5-89EE0DA9739C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1683C373-301A-42F8-BFE5-89EE0DA9739C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1683C373-301A-42F8-BFE5-89EE0DA9739C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0A4B41C-1EE8-424A-89E5-0215D6DF3168}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0A4B41C-1EE8-424A-89E5-0215D6DF3168}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0A4B41C-1EE8-424A-89E5-0215D6DF3168}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0A4B41C-1EE8-424A-89E5-0215D6DF3168}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2579215-C1DC-4864-9629-AEF6BF243AD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2579215-C1DC-4864-9629-AEF6BF243AD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2579215-C1DC-4864-9629-AEF6BF243AD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2579215-C1DC-4864-9629-AEF6BF243AD8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,81 @@
+﻿@page "/movie/{Id}"
+@using Database
+@using BlazorSolver.Components.Util
+@attribute [StreamRendering(true)]
+
+@if (_movie is null)
+{
+    <Load/>
+}
+else
+{
+    <h1> @_movie.NamesToString [@_movie.ScoreToString ✭] </h1>
+
+    <h1> Actors </h1>
+
+    <div class="titled-list">
+        <span class="movie-section-title"> </span>
+        <div class="actors-list">
+            @foreach (var a in _movie.Actors)
+            {
+                <a href=@($"/person/{a.FullName}")> @a.FullName </a>
+            }
+        </div>
+    </div>
+
+    <h1> Directors </h1>
+
+    <div class="titled-list">
+        <span class="movie-section-title"> </span>
+        <div class="directors-list">
+            @foreach (var d in _movie.Director)
+            {
+                <a href=@($"/person/{d.FullName}")> @d.FullName </a>
+            }
+        </div>
+    </div>
+
+    <h1> Tags </h1>
+
+    <div class="tags-list">
+        @foreach (var tag in _movie.Tags)
+        {
+            <a href=@($"/tag/{tag.Name}")> @tag.Name </a>
+        }
+    </div>
+
+    <h1> Similar movies </h1>
+
+    @if (_similar is null)
+    {
+        <Load/>
+    }
+    else
+    {
+        <div class="similar-list">
+            @foreach (var score in _similar)
+            {
+                <span> @score.Item2 <a href=@($"/movie/{score.Item1}")> @score.Item1 </a></span>
+            }
+        </div>
+    }
+}
+
+@code {
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    private ContexFactory _factory = new ContexFactory();
+    private Parser.DataClasses.Movie? _movie;
+    private List<Tuple<string, float>>? _similar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _movie = await Task.Run(() => Queries.findMoviesByName(_factory, Id).FirstOrDefault());
+        StateHasChanged();
+
+        _similar = await Task.Run(() => Queries.getSimilarMoviesByName(_factory, Id));
+        StateHasChanged();
+    }
+}
