@@ -1,6 +1,7 @@
 ﻿@page "/movie/{Id}"
 @using Database
 @using BlazorSolver.Components.Util
+@using WebAPI
 @attribute [StreamRendering(true)]
 
 @if (_movie is null)
@@ -10,6 +11,25 @@
 else
 {
     <h1> @_movie.NamesToString [@_movie.ScoreToString ✭] </h1>
+
+    @if (_movieAdditionInfo is null)
+    {
+        <Load/>
+    }
+    else
+    {
+        <table>
+            <tr>
+                <td>
+                    <img src="@_movieAdditionInfo.Poster" alt="Nou image ("/>
+                </td>
+                <td>
+                    @_movieAdditionInfo.Plot
+                </td>
+            </tr>
+
+        </table>
+    }
 
     <h1> Actors </h1>
 
@@ -69,10 +89,15 @@ else
     private ContexFactory _factory = new ContexFactory();
     private Parser.DataClasses.Movie? _movie;
     private List<Tuple<string, float>>? _similar;
+    private WebAPI.Movie? _movieAdditionInfo;
 
     protected override async Task OnInitializedAsync()
     {
         _movie = await Task.Run(() => Queries.findMoviesByName(_factory, Id).FirstOrDefault());
+        StateHasChanged();
+
+        var loader = new Loader();
+        _movieAdditionInfo = await loader.GetResponse(_movie.ImdbId);
         StateHasChanged();
 
         _similar = await Task.Run(() => Queries.getSimilarMoviesByName(_factory, Id));
